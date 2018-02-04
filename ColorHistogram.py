@@ -6,11 +6,10 @@ output_handle = open(output_filename, 'w')
 
 # Load images from folders in loop
 directory = '../unknown'
+aurora = '1'
 for filename in os.listdir(directory):
     combined_filename = os.path.join(directory, filename)
     img = cv2.imread(combined_filename)
-
-    aurora = '1'
     series_str = aurora
 
     # Loop over the three colors (Blue, Green, Red) (OpenCV has this order)
