@@ -13,6 +13,9 @@ images/
 *.png
 *.jpg
 
+# Add pdf files to ignore
+*.pdf
+
 # Distribution / packaging
 .Python
 build/
