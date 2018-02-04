@@ -9,6 +9,10 @@ __pycache__/
 # Ignore the images folder
 images/
 
+# Ignore the images
+*.png
+*.jpg
+
 # Distribution / packaging
 .Python
 build/
