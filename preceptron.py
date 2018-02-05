@@ -8,7 +8,8 @@ import os
 
 DEBUG = True
 random.seed()
-weights_filename = 'weights'
+weights_filename = 'weights.csv'
+weights_zero_filename = 'weight_zero.csv'
 
 plt.xlabel('0-255')
 plt.ylabel('count of hue')
@@ -77,13 +78,17 @@ W = [0]*len(X[0])  # Length of the columns in the first row
 for i in range(0, len(W)):
     W[i] = random.randint(-1, 1)
 
-W = np.genfromtxt(weights_filename + ".csv", delimiter=',')
+#W = np.genfromtxt(weights_filename, delimiter=',')
 
 WZ = random.randint(-1, 1)
+
+#handle = open(weights_zero_filename, 'r')
+#WZ = float(handle.readline())
+
 TRN = 0
 ACC = 0
 learn = 0.01
-iterations = 1000
+iterations = 10000
 batchStart = 0
 batchSize = 5
 
@@ -194,10 +199,8 @@ plt.plot(W[range(256, 511)], 'go')
 plt.plot(W[range(512, 768)], 'ro')
 plt.show()
 
-ACC_STR = str(int(ACC_PER * 100))
-
-np.savetxt(weights_filename + ACC_STR + ".csv", W, delimiter=',')
-output_file = open('weight_zero' + ACC_STR + '.csv', 'w')
-output_file.write(WZ)
+np.savetxt(weights_filename, W, delimiter=',')
+output_file = open(weights_zero_filename, 'w')
+output_file.write(str(WZ))
 output_file.close()
 print(WZ)
