@@ -16,6 +16,9 @@ images/
 # Add pdf files to ignore
 *.pdf
 
+# Ignore the csv files
+*.csv
+
 # Distribution / packaging
 .Python
 build/
