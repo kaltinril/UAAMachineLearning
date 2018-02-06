@@ -88,7 +88,7 @@ WZ = random.randint(-1, 1)
 TRN = 0
 ACC = 0
 learn = 0.01
-iterations = 10000
+iterations = 1
 batchStart = 0
 batchSize = 5
 
@@ -106,6 +106,20 @@ X = (X - X.min()) / (float(X.max()) - X.min())
 # plt.plot(X[0][range(512, 768)], 'r')
 # plt.show()
 
+mse = []
+
+
+# 1/2*1/N Sum_{i=0}^{N = batch size) (y-y^)^2
+# size = N
+# error_value = y-y_hat
+def calc_mse(size, error_values):
+
+    sum_of_error = 0
+    for i in range(0, size):
+        sum_of_error += (error_values[i] * error_values[i])
+
+    mse.append(0.5 * (1 / size) * sum_of_error)
+
 
 # This is the Y Hat
 # Y is the 1 or 0 for "Aurora = 1" and "Not = 0"
@@ -117,9 +131,9 @@ def perceptron_calculation(histograms, row_index):
     total = np.sum(result_array)
     total = total + WZ
 
-    result = 1
-    if total < 0.5:
-        result = 0
+    result = 0
+    if total > 0:
+        result = 1
 
     return result
 
@@ -138,6 +152,8 @@ def adjust_weight(histograms, hist_y, row_index, y_hat):
         W[column] = W[column] - (learn_error * x_values[column])
 
     WZ = WZ - learn_error
+
+    calc_mse(1, [error_value])
 
 
 # TRAINING
@@ -204,3 +220,7 @@ output_file = open(weights_zero_filename, 'w')
 output_file.write(str(WZ))
 output_file.close()
 print(WZ)
+
+mse = np.asarray(mse)
+plt.plot(mse)
+plt.show()
