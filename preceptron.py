@@ -22,7 +22,7 @@ except:
     exit(1)
 
 # Print out the values found in the arguments
-print("Using: learn=" + str(learn) + " iterations=" + str(iterations) + " batch_size=" + batch_size)
+print("Using: learn=" + str(learn) + " iterations=" + str(iterations) + " batch_size=" + str(batch_size))
 
 print("DEBUG: Loading histogram CSV") if DEBUG else None
 data = pd.read_csv('./aurora_histogram.csv', header=None)
