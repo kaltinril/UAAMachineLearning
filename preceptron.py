@@ -3,15 +3,26 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import time
+import sys
 
 print("Aurora photo analysis using Machine Learning Perceptron and gradient batch decent")
-
 start_time = time.time()
 
 DEBUG = True
 random.seed()
-weights_filename = 'weights.csv'
-weights_zero_filename = 'weight_zero.csv'
+
+# Load parameters from command line
+try:
+    learn = float(sys.argv[1])
+    iterations = int(sys.argv[2])
+    batch_size = int(sys.argv[3])
+except:
+    print("Error, missing one of the three required parameters.")
+    print("usage: preceptron.py <learn> <iterations> <batch_size>")
+    exit(1)
+
+# Print out the values found in the arguments
+print("Using: learn=" + str(learn) + " iterations=" + str(iterations) + " batch_size=" + batch_size)
 
 print("DEBUG: Loading histogram CSV") if DEBUG else None
 data = pd.read_csv('./aurora_histogram.csv', header=None)
@@ -79,11 +90,6 @@ for i in range(0, len(W)):
 print("DEBUG: Normalizing the X values") if DEBUG else None
 X = (X - X.min()) / (float(X.max()) - X.min())
 
-# Parameters
-learn = 0.01
-iterations = 500  # This is the "number of batches" essentially now
-batch_size = 1000
-
 # Arrays and variables for graphing or analysis
 TRN = 0
 ACC = 0
@@ -104,6 +110,15 @@ print("Used Batch Size: " + str(batch_size))
 print("Used Iterations: " + str(iterations))
 print("Used Learn Rate: " + str(learn))
 start_perceptron = time.time()
+
+
+# Use the global values ofr learn, iterations, and batch_size to generate a related filename prefix
+def make_data_filename(type_of_file, file_content):
+    return "./runs/" + str(learn) + "_learn_" \
+           + str(iterations) + "_iter_" \
+           + str(batch_size) + "_batch_" \
+           + str(file_content) + "." + str(type_of_file)
+
 
 # This is the Y Hat
 # Y is the 1 or 0 for "Aurora = 1" and "Not = 0"
@@ -206,24 +221,39 @@ for its in range(0, iterations):
         tbe_avg.append(tavgsum / avg_across)
         vbe_avg.append(vavgsum / avg_across)
 
-end_perceptron = time.time()
+end_perceptron = time.time()  # Capture timing for calculations of how long different parts took
 
 TRN_PER = TRN / (iterations * batch_size)
 ACC_PER = ACC / (iterations * batch_size)
+print("")
+print("********* Results ***********")
 print("Training Error %: " + str(1-TRN_PER))
 print("Validate Error %: " + str(1-ACC_PER))
 
 
 # Save the final weights and the "WZ" value
 W = np.asarray(W)
-np.savetxt(weights_filename, W, delimiter=',')
-output_file = open(weights_zero_filename, 'w')
+np.savetxt(make_data_filename('csv', 'batch_weights'), W, delimiter=',')
+output_file = open(make_data_filename('txt', 'batch_wz'), 'w')
 output_file.write(str(WZ))
 output_file.close()
 
+# Save the graph of the final weights
+plt.plot(W[range(0, 255)], 'bo', label="Weights for blue")
+plt.plot(W[range(256, 511)], 'go', label="Weights for green")
+plt.plot(W[range(512, 768)], 'ro', label="Weights for red")
+plt.xlabel('0-255 (Color range)')
+plt.ylabel('Weight')
+plt.title('Weight vs Color value')
+plt.legend()
+plt.savefig(make_data_filename('png', 'weights_plot'), dpi=600)
+plt.close()
+
+# Save the files that failed
 print("Total Failed files in last batch:", len(failed_filenames))
-print(failed_filenames)
-print("")
+output_file = open(make_data_filename('txt', 'batch_failed_files'), 'w')
+output_file.write(str(failed_filenames))
+output_file.close()
 
 # Convert the arrays to numpy arrays so they plot easily
 val_batch_error = np.asarray(val_batch_error)
@@ -254,8 +284,8 @@ plt.xlabel('Batch Iterations')
 plt.ylabel('Percent Error')
 plt.title('Training vs Validation error rate')
 plt.legend()
-plt.savefig("err_pct_" + str(learn) + "_learn_" + str(iterations) + "_iter_" + str(batch_size) + "_batch.png")
-#plt.show()
+plt.savefig(make_data_filename('png', 'batch_err_pct'), dpi=600)
+plt.close()
 
 # Exaggerated (highly averaged) graph of train vs validation
 tbe_avg = np.asarray(tbe_avg)
@@ -266,8 +296,8 @@ plt.xlabel('Batch Iterations (averaged)')
 plt.ylabel('Percent Error')
 plt.title('Training vs Validation error rate (Averaged)')
 plt.legend()
-plt.savefig("err_pct_avg_" + str(learn) + "_learn_" + str(iterations) + "_iter_" + str(batch_size) + "_batch.png")
-#plt.show()
+plt.savefig(make_data_filename('png', '_batch_err_pct_avg.png'), dpi=600)
+plt.close()
 
 end_program = time.time()
 print("")
