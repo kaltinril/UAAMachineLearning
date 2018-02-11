@@ -11,9 +11,9 @@ random.seed()
 weights_filename = 'weights.csv'
 weights_zero_filename = 'weight_zero.csv'
 
-plt.xlabel('0-255')
-plt.ylabel('count of hue')
-plt.title('RGB histogram')
+plt.xlabel('Batch Iterations')
+plt.ylabel('Percent Error')
+plt.title('Training vs Validation error rate')
 
 print("DEBUG: Loading histogram CSV") if DEBUG else None
 data = pd.read_csv('./aurora_histogram.csv', header=None)
@@ -87,26 +87,18 @@ WZ = random.randint(-1, 1)
 
 TRN = 0
 ACC = 0
-learn = 0.01
-iterations = 1
-batchStart = 0
-batchSize = 5
-
+learn = 0.001
+iterations = 750  # This is the "number of batches"
+batch_size = 100
 filenames = data[:, cols-1]
-
-# plt.plot(X[0][range(0, 255)], 'b')
-# plt.plot(X[0][range(256, 511)], 'g')
-# plt.plot(X[0][range(512, 768)], 'r')
-# plt.show()
-
 X = (X - X.min()) / (float(X.max()) - X.min())
 
-# plt.plot(X[0][range(0, 255)], 'b')
-# plt.plot(X[0][range(256, 511)], 'g')
-# plt.plot(X[0][range(512, 768)], 'r')
-# plt.show()
-
 mse = []
+trn_batch_error = []
+val_batch_error = []
+
+tbe_avg = []
+vbe_avg = []
 
 
 # 1/2*1/N Sum_{i=0}^{N = batch size) (y-y^)^2
@@ -153,37 +145,102 @@ def adjust_weight(histograms, hist_y, row_index, y_hat):
 
     WZ = WZ - learn_error
 
-    calc_mse(1, [error_value])
+    # calc_mse(1, [error_value])
 
+failed_filenames = []
+
+train_validate_split = int(rows * .8)
+tbavgcnt = 0
+vbavgcnt = 0
+tavgsum = 0
+vavgsum = 0
+for its in range(0, iterations):
+    batch_training_error_count = 0
+    batch_validate_error_count = 0
+
+    # Training batch
+    batch_value = 0
+    while(batch_value < batch_size):
+        # Pick random value for next row to use in training
+        picked_training_row = random.randint(0, train_validate_split - 1)
+
+        y_hat = perceptron_calculation(X, picked_training_row)
+        if Y[picked_training_row] == y_hat:
+            TRN += 1  # We got the correct prediction, increment by 1
+        else:
+            adjust_weight(X, Y, picked_training_row, y_hat)
+            batch_training_error_count += 1
+
+        # Increment the batch
+        batch_value += 1
+
+    tavgsum += batch_training_error_count / batch_size
+
+    # Store the average error for all predictions
+    trn_batch_error.append(batch_training_error_count / batch_size)
+
+    # Validation Batch
+    batch_value = 0
+    while (batch_value < batch_size):
+        # Pick a random value for the next row to use in the validation
+        picked_validation_row = random.randint(train_validate_split, rows - 1)
+
+        y_hat = perceptron_calculation(X, picked_validation_row)
+        if Y[picked_validation_row] == y_hat:
+            # Put the accuracy updates here
+            ACC += 1  # We got the correct prediction, increment by 1
+        else:
+            batch_validate_error_count += 1
+            if its == (iterations - 1):
+                failed_filenames.append(filenames[picked_validation_row])
+
+        # Increment the batch
+        batch_value += 1
+
+    vavgsum += batch_validate_error_count / batch_size
+
+    # Store the average error for all predictions
+    val_batch_error.append(batch_validate_error_count / batch_size)
+
+    print("Iteration: " + str(its),
+          "Train err%:", str(batch_training_error_count / batch_size),
+          "Valid err%:", str(batch_validate_error_count / batch_size))
+
+    tbavgcnt += 1
+    vbavgcnt += 1
+    tbavgcnt = tbavgcnt % 10
+    vbavgcnt = vbavgcnt % 10
+
+    if tbavgcnt == 9:
+        tbe_avg.append(tavgsum / 10)
+        vbe_avg.append(vavgsum / 10)
 
 # TRAINING
 # Loop over all rows
 # Check if we are correct or not.
 # If we are correct, continue
 # if not, adjust weight
+# for its in range(0, iterations):
+#     for row in range(0, train_validate_split):
+#         y_hat = perceptron_calculation(X, row)
+#         if Y[row] == y_hat:
+#             TRN += 1  # We got the correct prediction, increment by 1
+#         else:
+#             adjust_weight(X, Y, row, y_hat)
+#
+#     print("TRN:", TRN, "Iter", its)
+#
+# # Validation range [ , )
+# for row in range(train_validate_split, rows):
+#     y_hat = perceptron_calculation(X, row)
+#     if Y[row] == y_hat:
+#         # Put the accuracy updates here
+#         ACC += 1  # We got the correct prediction, increment by 1
 
-train_validate_split = int(rows * .8)
-for its in range(0, iterations):
-    for row in range(0, train_validate_split):
-        y_hat = perceptron_calculation(X, row)
-        if Y[row] == y_hat:
-            TRN += 1  # We got the correct prediction, increment by 1
-        else:
-            adjust_weight(X, Y, row, y_hat)
-
-    print("TRN:", TRN, "Iter", its)
-
-# Validation
-for row in range(train_validate_split, rows):
-    y_hat = perceptron_calculation(X, row)
-    if Y[row] == y_hat:
-        # Put the accuracy updates here
-        ACC += 1  # We got the correct prediction, increment by 1
-
-TRN_PER = (TRN / iterations) / train_validate_split
-ACC_PER = ACC / (rows - train_validate_split)
-print("Training Correctness: " + str(TRN_PER))
-print("Accuracy: " + str(ACC_PER))
+TRN_PER = TRN / (iterations * batch_size)
+ACC_PER = ACC / (iterations * batch_size)
+print("Training Error %: " + str(1-TRN_PER))
+print("Validate Error %: " + str(1-ACC_PER))
 
 # for i in range(iterations):
 #     bStart = batchStart
@@ -204,16 +261,17 @@ print("Accuracy: " + str(ACC_PER))
 # plt.plot(range(0,255), X[:, range(0,255)], 'bo')
 # plt.plot(range(0,255), X[:, range(256, 511)], 'go')
 # plt.plot(range(0,255), X[:, range(512, 768)], 'ro')
-W = np.asarray(W)
-plt.plot(W[range(0,255)], 'b')
-plt.plot(W[range(256, 511)], 'g')
-plt.plot(W[range(512, 768)], 'r')
-plt.show()
 
-plt.plot(W[range(0,255)], 'bo')
-plt.plot(W[range(256, 511)], 'go')
-plt.plot(W[range(512, 768)], 'ro')
-plt.show()
+W = np.asarray(W)
+# plt.plot(W[range(0,255)], 'b')
+# plt.plot(W[range(256, 511)], 'g')
+# plt.plot(W[range(512, 768)], 'r')
+# plt.show()
+#
+# plt.plot(W[range(0,255)], 'bo')
+# plt.plot(W[range(256, 511)], 'go')
+# plt.plot(W[range(512, 768)], 'ro')
+# plt.show()
 
 np.savetxt(weights_filename, W, delimiter=',')
 output_file = open(weights_zero_filename, 'w')
@@ -221,6 +279,25 @@ output_file.write(str(WZ))
 output_file.close()
 print(WZ)
 
-mse = np.asarray(mse)
-plt.plot(mse)
+# mse = np.asarray(mse)
+# plt.plot(mse)
+# plt.show()
+
+print(len(failed_filenames))
+print(failed_filenames)
+
+val_batch_error = np.asarray(val_batch_error)
+plt.plot(val_batch_error, 'g', label="Validation Error %")
+trn_batch_error = np.asarray(trn_batch_error)
+plt.plot(trn_batch_error, 'r', label="Training Error %")
+plt.legend()
+plt.show()
+
+
+tbe_avg = np.asarray(tbe_avg)
+vbe_avg = np.asarray(vbe_avg)
+
+plt.plot(vbe_avg, 'g', label="Validation Error %")
+plt.plot(tbe_avg, 'r', label="Training Error %")
+plt.legend()
 plt.show()
