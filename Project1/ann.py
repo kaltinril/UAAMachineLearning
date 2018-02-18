@@ -4,8 +4,8 @@ class ANN:
     def __init__(self):
         # Layer definitions
         self.inputLayerSize = 16
-        self.hiddenLayerSize = 10
-        self.hiddenLayerWidth = 1
+        self.hiddenLayerSize = 20
+        self.hiddenLayerWidth = 2
         self.outputLayerSize = 26
 
         # Layer arrays
@@ -20,7 +20,8 @@ class ANN:
         # input to Layer1
         self.S_in = np.dot(X, self.W_in)
         self.Z_in = self.sigmoid(self.S_in)
-        self.S = np.dot(self.Z_in, self.W[0])
+
+        self.S = np.dot(self.Z_in, self.W[:, 0])
 
         # Layer1 to Layer2 (N to N+!)
 
