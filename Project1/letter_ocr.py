@@ -24,9 +24,11 @@ for i in range(1, 17):
 
 nn = ann.ANN()
 for i in range(0, 500):
-    yhat = nn.foward(X[i]) # 1 row at a time
-    if np.max(Y[i] - yhat) is not 0.0:
-        nn.back_propagation(X[i], Y[i])
+    x = X[i].reshape(X[i].shape[0], 1).T
+    y = Y[i].reshape(Y[i].shape[0], 1).T
+    yhat = nn.foward(x) # 1 row at a time
+    if np.max(y - yhat) is not 0.0:
+        nn.back_propagation(x, y)
         numberWrong += 1
 
 print(yhat)
