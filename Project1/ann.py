@@ -33,7 +33,7 @@ class ANN:
         return 1 / (1 + np.exp(-s))  # 1 / (1 + e^-s)
 
     def sigmoid_prime(self, z):
-        return np.exp(-z) / (1+np.exp(-z)**2)
+        return z*(1-z)  # np.exp(-z) / (1+np.exp(-z)**2)
 
     def softmax(self, z):
         soft = np.full(self.outputLayerSize, 0.10)
@@ -49,13 +49,13 @@ class ANN:
         # print(self.SM)
         # print("SM:",self.SM.shape,"Y:", Y.shape, "S2:", self.S2.shape)
         # print(np.subtract(Y,self.SM))
-        delta2 = np.multiply(-(np.subtract(Y,self.SM)), self.sigmoid_prime(self.S2))
-        print("D2",delta2)
+        delta2 = np.multiply(-(np.subtract(Y, self.Z2)), self.sigmoid_prime(self.S2))
+        #print("D2",delta2)
         djdW2 = np.dot(self.Z1.T, delta2)
 
-        delta = np.dot(delta2, self.W2.T)*self.sigmoid_prime(self.S1)
+        delta = np.dot(delta2, self.W2.T)*self.sigmoid_prime(self.Z1)
         djdW1 = np.dot(X.T, delta)
-        self.W2 = self.W2 - self.learn*djdW2
-        self.W1 = self.W1 - self.learn*djdW1
+        self.W2 = self.W2 + self.learn*djdW2
+        self.W1 = self.W1 + self.learn*djdW1
 
 

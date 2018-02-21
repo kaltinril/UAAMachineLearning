@@ -23,13 +23,23 @@ for i in range(1, 17):
     X[:,i] = (X[:,i] - X[:,i].min()) / (float(X[:,i].max()) - X[:,i].min())
 
 nn = ann.ANN()
-for i in range(0, 500):
+batch_size = 500
+for i in range(0, batch_size):
+    # Fix the issue with Numpy array being (17,) instead of (1,17)
     x = X[i].reshape(X[i].shape[0], 1).T
+    # print("X Shape",x.shape)
     y = Y[i].reshape(Y[i].shape[0], 1).T
     yhat = nn.foward(x) # 1 row at a time
-    if np.max(y - yhat) is not 0.0:
+    y_letter = np.argmax(y)
+    yhat_letter = np.argmax(yhat)
+    print(y_letter, yhat_letter)
+    if y_letter != yhat_letter:
         nn.back_propagation(x, y)
         numberWrong += 1
 
 print(yhat)
-print(numberWrong)
+print("Batch size:", batch_size)
+print("Number Wrong:",numberWrong)
+percent_wrong = (numberWrong / batch_size) * 100
+print("Error percent:",percent_wrong,"%")
+print("Accuracy percent:", (100 - percent_wrong),"%")
