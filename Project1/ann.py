@@ -6,7 +6,7 @@ class ANN:
         self.inputLayerSize = 17
         self.hiddenLayerSize = 17
         self.outputLayerSize = 26
-        self.learn = 0.01
+        self.learn = 1
 
         # Layer arrays
         self.W1 = np.random.random_integers(-1, 1, (self.inputLayerSize, self.hiddenLayerSize))
@@ -24,9 +24,9 @@ class ANN:
         self.S2 = np.dot(self.Z1, self.W2)
         self.Z2 = self.sigmoid(self.S2) #self.Z2 = yhat
         self.SM = self.softmax(self.Z2)
-        print("Z1", self.Z1.shape)
-        print("W2", self.W2.shape)
-        print("S2", self.S2.shape)
+        #print("Z1", self.Z1.shape)
+        # print("W2", self.W2.shape)
+        # print("S2", self.S2.shape)
         return self.SM
 
     def sigmoid(self, s):
@@ -46,16 +46,15 @@ class ANN:
     ## delta[n] = (-Y - self.SM) *
     # where n refers to the layer starting with 0 for input
     def back_propagation(self, X, Y):
-        # print(self.SM)
-        # print("SM:",self.SM.shape,"Y:", Y.shape, "S2:", self.S2.shape)
-        # print(np.subtract(Y,self.SM))
-        delta2 = np.multiply(-(np.subtract(Y, self.Z2)), self.sigmoid_prime(self.S2))
-        #print("D2",delta2)
+        delta3 = self.Z2 - Y
+        delta2 = np.multiply(delta3, self.sigmoid_prime(self.Z2))
+        delta = np.dot(delta2, self.W2.T) * self.sigmoid_prime(self.Z1)
+
+        # Weight updates
+        djdW1 = np.dot(X.T, delta)
         djdW2 = np.dot(self.Z1.T, delta2)
 
-        delta = np.dot(delta2, self.W2.T)*self.sigmoid_prime(self.Z1)
-        djdW1 = np.dot(X.T, delta)
-        self.W2 = self.W2 + self.learn*djdW2
-        self.W1 = self.W1 + self.learn*djdW1
+        self.W2 = self.W2 - self.learn*djdW2
+        self.W1 = self.W1 - self.learn*djdW1
 
 
