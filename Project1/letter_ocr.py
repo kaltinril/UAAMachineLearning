@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import random
 import ann
 #np.set_printoptions(threshold=np.nan)
 
@@ -72,11 +73,13 @@ def validate(runNum):
 
 nn = ann.ANN()
 print("Learn Rate:", nn.learn)
-epocs = 10
-iterations = 200
+epocs = 200
+iterations = 10
 batch_size = 16000
 for h in range(epocs):
+    nn.learn = random.uniform(0.07,0.9)
     for j in range(0, iterations):
+        nn.learn += 0.001
         for i in range(0, batch_size):
             # Fix the issue with Numpy array being (17,) instead of (1,17)
             x = X[i].reshape(X[i].shape[0], 1).T
