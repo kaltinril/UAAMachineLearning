@@ -26,10 +26,55 @@ for i in range(1, 17):
 # Create a 26x26 array for our heatmap
 actual_vs_predicted = np.full((26,26), 0)
 
+
+
+def printStats(type, epochs, iters, batchSize, wrong, mode, static):
+    total_rows = iters * batchSize * epochs
+    percent_wrong = (wrong / total_rows) * 100
+
+    if mode != 'simple':
+        print()
+        print(static, "MODE: ", type)
+        print(static, "Epoch size:", epochs)
+        print(static, "Iterations:", iters)
+        print(static, "Batch size:", batchSize)
+        print(static, "Number Wrong:",wrong)
+        print(static, "Number possible:", total_rows)
+        print(static, "Error percent:",percent_wrong,"%")
+    print(static, "Accuracy percent:", (100 - percent_wrong),"%")
+
+
+def validate(runNum):
+    # QUick validation at the next block
+    validation_errors = 0
+    validation_range = 4000
+    for i in range(batch_size, validation_range + batch_size):
+        # Fix the issue with Numpy array being (17,) instead of (1,17)
+        x = X[i].reshape(X[i].shape[0], 1).T
+        y = Y[i].reshape(Y[i].shape[0], 1).T
+
+        yhat = nn.foward(x)  # 1 row at a time
+
+        # Get the max array index for the 0-25 array (What letter)
+        y_letter = np.argmax(y)
+        yhat_letter = np.argmax(yhat)
+
+        # Store the values so we can create a 2D heat map
+        actual_vs_predicted[y_letter, yhat_letter] += 1
+
+        # If we were wrong, calulcate that
+        if y_letter != yhat_letter:
+            validation_errors += 1
+
+    printStats('Validation', 1, 1, validation_range, validation_errors, "simple", runNum)
+
+
+
 nn = ann.ANN()
-epocs = 50
-iterations = 100
-batch_size = 500
+print("Learn Rate:", nn.learn)
+epocs = 10
+iterations = 200
+batch_size = 16000
 for h in range(epocs):
     for j in range(0, iterations):
         for i in range(0, batch_size):
@@ -51,47 +96,17 @@ for h in range(epocs):
             # If our prediction was wrong, back propogate
             if y_letter != yhat_letter:
                 numberWrong += 1
+        validate(str(h) + " " + str(j))
 
-# QUick validation at the next block
-validation_errors = 0
-for i in range(batch_size, batch_size * 2):
-    # Fix the issue with Numpy array being (17,) instead of (1,17)
-    x = X[i].reshape(X[i].shape[0], 1).T
-    y = Y[i].reshape(Y[i].shape[0], 1).T
-
-    yhat = nn.foward(x)  # 1 row at a time
-
-    # Get the max array index for the 0-25 array (What letter)
-    y_letter = np.argmax(y)
-    yhat_letter = np.argmax(yhat)
-
-    # Store the values so we can create a 2D heat map
-    actual_vs_predicted[y_letter, yhat_letter] += 1
-
-    # If we were wrong, calulcate that
-    if y_letter != yhat_letter:
-        validation_errors += 1
 
 
 #print(actual_vs_predicted)
 
-def printStats(type, epochs, iters, batchSize, wrong):
-    total_rows = iters * batchSize * epochs
-    percent_wrong = (wrong / total_rows) * 100
-    print("MODE: ", type)
-    print("Epoch size:", epochs)
-    print("Iterations:", iters)
-    print("Batch size:", batchSize)
-    print("Number Wrong:",wrong)
-    print("Number possible:", total_rows)
-    print("Error percent:",percent_wrong,"%")
-    print("Accuracy percent:", (100 - percent_wrong),"%")
-    print()
 
 
-printStats('Training', epocs, iterations, batch_size, numberWrong)
-printStats('Validation', 1, 1, batch_size, validation_errors)
-
+printStats('Training', epocs, iterations, batch_size, numberWrong, "", "")
+actual_vs_predicted = np.full((26,26), 0)
+validate("end")
 plt.imshow(actual_vs_predicted, cmap='hot', interpolation='nearest')
 plt.show()
 
