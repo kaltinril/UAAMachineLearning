@@ -26,30 +26,36 @@ for i in range(1, 17):
 actual_vs_predicted = np.full((26,26), 0)
 
 nn = ann.ANN()
-iterations = 1000
-batch_size = 160
-numberWrong = 0
-for j in range(0, iterations):
-    for i in range(0, batch_size):
-        # Fix the issue with Numpy array being (17,) instead of (1,17)
-        x = X[i].reshape(X[i].shape[0], 1).T
-        # print("X Shape",x.shape)
-        y = Y[i].reshape(Y[i].shape[0], 1).T
-        yhat = nn.foward(x) # 1 row at a time
-        y_letter = np.argmax(y)
-        yhat_letter = np.argmax(yhat)
-        actual_vs_predicted[y_letter, yhat_letter] += 1
-        #print(y_letter, yhat_letter)
-        if y_letter != yhat_letter:
-            nn.back_propagation(x, y)
-            numberWrong += 1
+epochs = 500
+iterations = 160
+batch_size = 100
+x = 0
+
+for h in range(epochs):
+    for j in range(0, iterations):
+        for i in range(0, batch_size):
+            # Fix the issue with Numpy array being (17,) instead of (1,17)
+            x = X[i].reshape(X[i].shape[0], 1).T
+            # print("X Shape",x.shape)
+            y = Y[i].reshape(Y[i].shape[0], 1).T
+            yhat = nn.foward(x) # 1 row at a time
+            y_letter = np.argmax(y)
+            yhat_letter = np.argmax(yhat)
+            actual_vs_predicted[y_letter, yhat_letter] += 1
+            #print(y_letter, yhat_letter)
+            if y_letter != yhat_letter:
+                nn.back_propagation(x, y)
+                numberWrong += 1
 
 #print(actual_vs_predicted)
 
 print("Batch size:", batch_size)
 print("Number Wrong:",numberWrong)
-total_rows = iterations * batch_size
+total_rows = iterations * batch_size * epochs
 print("Number possible:", total_rows)
 percent_wrong = (numberWrong / total_rows) * 100
 print("Error percent:",percent_wrong,"%")
 print("Accuracy percent:", (100 - percent_wrong),"%")
+
+print("X[i]",x.shape)
+nn.printShapes()
