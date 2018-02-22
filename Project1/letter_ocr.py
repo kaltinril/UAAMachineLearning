@@ -27,9 +27,9 @@ for i in range(1, 17):
 actual_vs_predicted = np.full((26,26), 0)
 
 nn = ann.ANN()
-epocs = 10
-iterations = 160
-batch_size = 100
+epocs = 50
+iterations = 100
+batch_size = 500
 for h in range(epocs):
     for j in range(0, iterations):
         for i in range(0, batch_size):
@@ -54,24 +54,25 @@ for h in range(epocs):
 
 # QUick validation at the next block
 validation_errors = 0
-for j in range(0, iterations):
-    for i in range(batch_size, batch_size * 2):
-        # Fix the issue with Numpy array being (17,) instead of (1,17)
-        x = X[i].reshape(X[i].shape[0], 1).T
-        y = Y[i].reshape(Y[i].shape[0], 1).T
+for h in range(epocs):
+    for j in range(0, iterations):
+        for i in range(batch_size, batch_size * 2):
+            # Fix the issue with Numpy array being (17,) instead of (1,17)
+            x = X[i].reshape(X[i].shape[0], 1).T
+            y = Y[i].reshape(Y[i].shape[0], 1).T
 
-        yhat = nn.foward(x)  # 1 row at a time
+            yhat = nn.foward(x)  # 1 row at a time
 
-        # Get the max array index for the 0-25 array (What letter)
-        y_letter = np.argmax(y)
-        yhat_letter = np.argmax(yhat)
+            # Get the max array index for the 0-25 array (What letter)
+            y_letter = np.argmax(y)
+            yhat_letter = np.argmax(yhat)
 
-        # Store the values so we can create a 2D heat map
-        actual_vs_predicted[y_letter, yhat_letter] += 1
+            # Store the values so we can create a 2D heat map
+            actual_vs_predicted[y_letter, yhat_letter] += 1
 
-        # If we were wrong, calulcate that
-        if y_letter != yhat_letter:
-            validation_errors += 1
+            # If we were wrong, calulcate that
+            if y_letter != yhat_letter:
+                validation_errors += 1
 
 
 #print(actual_vs_predicted)
@@ -91,7 +92,9 @@ def printStats(type, epochs, iters, batchSize, wrong):
 
 
 printStats('Training', epocs, iterations, batch_size, numberWrong)
-printStats('Validation', 1, iterations, batch_size, validation_errors)
+printStats('Validation', epocs, iterations, batch_size, validation_errors)
 
-#plt.imshow(a, cmap='hot', interpolation='nearest')
-#plt.show()
+plt.imshow(actual_vs_predicted, cmap='hot', interpolation='nearest')
+plt.show()
+
+print(actual_vs_predicted)
