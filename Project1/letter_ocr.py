@@ -77,9 +77,7 @@ epocs = 200
 iterations = 10
 batch_size = 16000
 for h in range(epocs):
-    nn.learn = random.uniform(0.07,0.9)
     for j in range(0, iterations):
-        nn.learn += 0.001
         for i in range(0, batch_size):
             # Fix the issue with Numpy array being (17,) instead of (1,17)
             x = X[i].reshape(X[i].shape[0], 1).T

@@ -21,9 +21,10 @@ class ANN:
         self.S1 = np.dot(X, self.W1)
         self.Z1 = self.sigmoid(self.S1)
         self.S2 = np.dot(self.Z1, self.W2)
-        self.Z2 = self.softmax(self.S2)
+        self.Z2 = self.sigmoid(self.S2)
+        self.yhat = self.softmax(self.S2)
 
-        return self.Z2
+        return self.yhat
 
     def sigmoid(self, s):
         return 1 / (1 + np.exp(-s))  # 1 / (1 + e^-s)
@@ -44,15 +45,36 @@ class ANN:
 
     # Back popagating error (Delta)
     def back_propagation(self, X, Y):
-        delta3 = self.Z2 - Y
-        delta2 = np.multiply(delta3, self.sigmoid_prime(self.Z2))
-        delta = np.dot(delta2, self.W2.T) * self.sigmoid_prime(self.Z1)
+        DEBUG = False
+        print("Y shape:", Y.shape) if DEBUG else None
+        self.yhat = self.yhat[np.newaxis]
+        print("yhat Shape:",self.yhat.shape) if DEBUG else None
+    
+        # Output Layer Delta
+        delta3 = (self.yhat - Y).T
+        print("D3: Output Delta shape: ", delta3.shape) if DEBUG else None
+        print("Z2SigPrim: ",self.sigmoid_prime(self.Z1).shape) if DEBUG else None
+        
+        # Hidden Layer Delta
+        delta2 = np.dot(delta3, self.sigmoid_prime(self.Z1))
+        print("D2: Hidden Delta shape: ", delta2.shape) if DEBUG else None
+        
+        # Input Layer Delta
+        delta = np.dot(self.W2, delta2) * self.sigmoid_prime(self.S1).T
+        print("D1: INput Delta shape: ", delta2.shape) if DEBUG else None
 
+        print("W1 shape:",self.W1.shape) if DEBUG else None
+        print("W2 shape:",self.W2.shape) if DEBUG else None
+        
+        
         # Weight updates
-        djdW1 = np.dot(X.T, delta)
-        djdW2 = np.dot(self.Z1.T, delta2)
-
-        self.W2 = self.W2 - self.learn*djdW2
-        self.W1 = self.W1 - self.learn*djdW1
+        djdW1 = np.dot(X, delta)
+        print("DeltaWeight1", djdW1.shape) if DEBUG else None
+        djdW2 = np.dot(self.Z1, delta2.T)
+        print("DeltaWeight2", djdW2.shape) if DEBUG else None
+        
+        
+        self.W2 = self.W2 + self.learn*djdW2
+        self.W1 = self.W1 + self.learn*djdW1
 
 
