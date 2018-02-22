@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 import ann
 #np.set_printoptions(threshold=np.nan)
 
@@ -26,30 +27,71 @@ for i in range(1, 17):
 actual_vs_predicted = np.full((26,26), 0)
 
 nn = ann.ANN()
-iterations = 1000
-batch_size = 160
-numberWrong = 0
+epocs = 10
+iterations = 160
+batch_size = 100
+for h in range(epocs):
+    for j in range(0, iterations):
+        for i in range(0, batch_size):
+            # Fix the issue with Numpy array being (17,) instead of (1,17)
+            x = X[i].reshape(X[i].shape[0], 1).T
+            y = Y[i].reshape(Y[i].shape[0], 1).T
+
+            yhat = nn.foward(x) # 1 row at a time
+
+            # Get the max array index for the 0-25 array (What letter)
+            y_letter = np.argmax(y)
+            yhat_letter = np.argmax(yhat)
+
+            # Store the values so we can create a 2D heat map
+            # actual_vs_predicted[y_letter, yhat_letter] += 1
+
+            nn.back_propagation(x, y)
+
+            # If our prediction was wrong, back propogate
+            if y_letter != yhat_letter:
+                numberWrong += 1
+
+# QUick validation at the next block
+validation_errors = 0
 for j in range(0, iterations):
-    for i in range(0, batch_size):
+    for i in range(batch_size, batch_size * 2):
         # Fix the issue with Numpy array being (17,) instead of (1,17)
         x = X[i].reshape(X[i].shape[0], 1).T
-        # print("X Shape",x.shape)
         y = Y[i].reshape(Y[i].shape[0], 1).T
-        yhat = nn.foward(x) # 1 row at a time
+
+        yhat = nn.foward(x)  # 1 row at a time
+
+        # Get the max array index for the 0-25 array (What letter)
         y_letter = np.argmax(y)
         yhat_letter = np.argmax(yhat)
+
+        # Store the values so we can create a 2D heat map
         actual_vs_predicted[y_letter, yhat_letter] += 1
-        #print(y_letter, yhat_letter)
+
+        # If we were wrong, calulcate that
         if y_letter != yhat_letter:
-            nn.back_propagation(x, y)
-            numberWrong += 1
+            validation_errors += 1
+
 
 #print(actual_vs_predicted)
 
-print("Batch size:", batch_size)
-print("Number Wrong:",numberWrong)
-total_rows = iterations * batch_size
-print("Number possible:", total_rows)
-percent_wrong = (numberWrong / total_rows) * 100
-print("Error percent:",percent_wrong,"%")
-print("Accuracy percent:", (100 - percent_wrong),"%")
+def printStats(type, epochs, iters, batchSize, wrong):
+    total_rows = iters * batchSize * epocs
+    percent_wrong = (wrong / total_rows) * 100
+    print("MODE: ", type)
+    print("Epoch size:", epochs)
+    print("Iterations:", iters)
+    print("Batch size:", batchSize)
+    print("Number Wrong:",wrong)
+    print("Number possible:", total_rows)
+    print("Error percent:",percent_wrong,"%")
+    print("Accuracy percent:", (100 - percent_wrong),"%")
+    print()
+
+
+printStats('Training', epocs, iterations, batch_size, numberWrong)
+printStats('Validation', 1, iterations, batch_size, validation_errors)
+
+#plt.imshow(a, cmap='hot', interpolation='nearest')
+#plt.show()
