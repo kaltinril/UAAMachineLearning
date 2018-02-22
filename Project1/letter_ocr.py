@@ -54,31 +54,29 @@ for h in range(epocs):
 
 # QUick validation at the next block
 validation_errors = 0
-for h in range(epocs):
-    for j in range(0, iterations):
-        for i in range(batch_size, batch_size * 2):
-            # Fix the issue with Numpy array being (17,) instead of (1,17)
-            x = X[i].reshape(X[i].shape[0], 1).T
-            y = Y[i].reshape(Y[i].shape[0], 1).T
+for i in range(batch_size, batch_size * 2):
+    # Fix the issue with Numpy array being (17,) instead of (1,17)
+    x = X[i].reshape(X[i].shape[0], 1).T
+    y = Y[i].reshape(Y[i].shape[0], 1).T
 
-            yhat = nn.foward(x)  # 1 row at a time
+    yhat = nn.foward(x)  # 1 row at a time
 
-            # Get the max array index for the 0-25 array (What letter)
-            y_letter = np.argmax(y)
-            yhat_letter = np.argmax(yhat)
+    # Get the max array index for the 0-25 array (What letter)
+    y_letter = np.argmax(y)
+    yhat_letter = np.argmax(yhat)
 
-            # Store the values so we can create a 2D heat map
-            actual_vs_predicted[y_letter, yhat_letter] += 1
+    # Store the values so we can create a 2D heat map
+    actual_vs_predicted[y_letter, yhat_letter] += 1
 
-            # If we were wrong, calulcate that
-            if y_letter != yhat_letter:
-                validation_errors += 1
+    # If we were wrong, calulcate that
+    if y_letter != yhat_letter:
+        validation_errors += 1
 
 
 #print(actual_vs_predicted)
 
 def printStats(type, epochs, iters, batchSize, wrong):
-    total_rows = iters * batchSize * epocs
+    total_rows = iters * batchSize * epochs
     percent_wrong = (wrong / total_rows) * 100
     print("MODE: ", type)
     print("Epoch size:", epochs)
@@ -92,7 +90,7 @@ def printStats(type, epochs, iters, batchSize, wrong):
 
 
 printStats('Training', epocs, iterations, batch_size, numberWrong)
-printStats('Validation', epocs, iterations, batch_size, validation_errors)
+printStats('Validation', 1, 1, batch_size, validation_errors)
 
 plt.imshow(actual_vs_predicted, cmap='hot', interpolation='nearest')
 plt.show()
