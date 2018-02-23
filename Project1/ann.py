@@ -53,16 +53,19 @@ class ANN:
         print("Z2:",self.Z2.shape) if DEBUG else None
     
         # Output Layer Delta
+        # self.layers[-1].D = (yhat - labels).T
         delta3 = (self.Z2 - Y).T
         print("D3: Output Delta shape: ", delta3.shape) if DEBUG else None
         print("Z2SigPrim: ",self.sigmoid_prime(self.Z1).shape) if DEBUG else None
         
         # Hidden Layer Delta
-        delta2 = self.W2.dot(delta3)
+        # i=1 (W2, Z2, D2)
+        # self.layers[i].D = W_nobias.dot(self.layers[i+1].D) * self.layers[i].Fp
+        delta2 = self.W2.dot(delta3) * self.sigmoid_prime(self.Z1).T
         print("D2: Hidden Delta shape: ", delta2.shape) if DEBUG else None
         
         # Input Layer Delta
-        delta = np.dot(self.W1, delta2) * self.sigmoid_prime(self.S1).T
+        delta = self.W1.dot(delta2) * self.sigmoid_prime(X).T
         print("D1: INput Delta shape: ", delta2.shape) if DEBUG else None
 
         print("W1 shape:",self.W1.shape) if DEBUG else None
