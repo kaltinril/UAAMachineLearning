@@ -15,6 +15,7 @@ class ANN:
         # 0.001 slower than 0.005, peaks around 63% around 350 epochs
         # 0.0005 again better than the above and below numbers, got to 63% around 350
         # 0.0001 super slow 53% around 500
+        # Need to test with other values.
 
         # Layer arrays
         self.W1 = np.random.random_integers(-1, 1, (self.inputLayerSize, self.hiddenLayerSize))
