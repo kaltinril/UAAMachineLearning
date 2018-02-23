@@ -6,11 +6,11 @@ class ANN:
         self.inputLayerSize = 17
         self.hiddenLayerSize = 17
         self.outputLayerSize = 26
-        self.learn = 0.002
+        self.learn = 0.01
 
         # Layer arrays
         self.W1 = np.random.random_integers(-1, 1, (self.inputLayerSize, self.hiddenLayerSize))
-        self.W2 = np.random.random_integers(-1, 1, (self.hiddenLayerSize, self.outputLayerSize))
+        self.W2 = np.random.random_integers(-1, 1, (self.hiddenLayerSize+1, self.outputLayerSize))
         self.S1 = None
         self.S2 = None
         self.Z1 = None
@@ -20,6 +20,10 @@ class ANN:
         # input to Layer1
         self.S1 = np.dot(X, self.W1)
         self.Z1 = self.sigmoid(self.S1)
+
+        # Add in a bias column
+        self.Z1 = np.append(self.Z1, np.ones((self.Z1.shape[0], 1)), axis=1)
+
         self.S2 = np.dot(self.Z1, self.W2)
         self.Z2 = self.sigmoid(self.S2)
         self.yhat = self.f_softmax(self.S2) # maybe not pass this back??
@@ -57,15 +61,23 @@ class ANN:
         delta3 = (self.Z2 - Y).T
         print("D3: Output Delta shape: ", delta3.shape) if DEBUG else None
         print("Z2SigPrim: ",self.sigmoid_prime(self.Z1).shape) if DEBUG else None
-        
+
+        # Exclude bias column from delta calculation
+        w2nobias = self.W2[0:-1, :]
+        z1nobias = self.Z1[:, 0:-1]
+
         # Hidden Layer Delta
         # i=1 (W2, Z2, D2)
         # self.layers[i].D = W_nobias.dot(self.layers[i+1].D) * self.layers[i].Fp
-        delta2 = self.W2.dot(delta3) * self.sigmoid_prime(self.Z1).T
+        delta2 = w2nobias.dot(delta3) * self.sigmoid_prime(z1nobias).T
         print("D2: Hidden Delta shape: ", delta2.shape) if DEBUG else None
-        
+
+        # Exclude bias column from delta calculation
+        w1nobias = self.W1[0:-1, :]
+        xnobias = X[:, 0:-1]
+
         # Input Layer Delta
-        delta = self.W1.dot(delta2) * self.sigmoid_prime(X).T
+        delta = w1nobias.dot(delta2) * self.sigmoid_prime(xnobias).T
         print("D1: INput Delta shape: ", delta2.shape) if DEBUG else None
 
         print("W1 shape:",self.W1.shape) if DEBUG else None
