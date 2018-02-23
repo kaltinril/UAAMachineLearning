@@ -75,7 +75,7 @@ nn = ann.ANN()
 print("Learn Rate:", nn.learn)
 epocs = 200
 iterations = 10
-batch_size = 16000
+batch_size = 10
 for h in range(epocs):
     for j in range(0, iterations):
         for i in range(0, batch_size):
@@ -83,12 +83,18 @@ for h in range(epocs):
             x = X[i].reshape(X[i].shape[0], 1).T
             y = Y[i].reshape(Y[i].shape[0], 1).T
 
+            #x = X[range(n, batch_size), :]
+            #y = Y[range(n, batch_size), :]
+            
             yhat = nn.foward(x) # 1 row at a time
-
+            
             # Get the max array index for the 0-25 array (What letter)
             y_letter = np.argmax(y)
             yhat_letter = np.argmax(yhat)
 
+            print("Yletter", y_letter)
+            print("yhatleter",yhat_letter)
+            
             # Store the values so we can create a 2D heat map
             # actual_vs_predicted[y_letter, yhat_letter] += 1
 
