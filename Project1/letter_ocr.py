@@ -89,8 +89,11 @@ def run_batches(xin, yin, batch_start, batch_size):
 
 def run_ann(xin, yin, batch_start, batch_size):
     total_wrong = 0
-    x = xin[range(batch_start, batch_size), :]
-    y = yin[range(batch_start, batch_size), :]
+    x = xin[range(batch_start, batch_start + batch_size), :]
+    y = yin[range(batch_start, batch_start + batch_size), :]
+
+    #x = xin[batch_start].reshape(xin[batch_start].shape[0], 1).T
+    #y = yin[batch_start].reshape(yin[batch_start].shape[0], 1).T
 
     yhat = nn.foward(x)  # 1 row at a time
     nn.back_propagation(x, y)  # Includes weight updates
@@ -115,7 +118,7 @@ def run_epochs(epochs, xin, yin, batch_start, batch_size):
     return total_overall_errors
 
 
-run_epochs(500, X, Y, 0, 16000)
+run_epochs(500, X, Y, 0, 100)
 
 # are the X values staying at 0?
 print("X bias average", np.average(X[:, 0]))
