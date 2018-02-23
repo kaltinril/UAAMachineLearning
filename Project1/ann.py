@@ -7,6 +7,14 @@ class ANN:
         self.hiddenLayerSize = 17
         self.outputLayerSize = 26
         self.learn = 0.01
+        # 1 = errors
+        # 0.1 = slow learning, peaks around 35% accuracy
+        # 0.05 = 50% around 50, then just jumps between 49-51 for remainder of 500 batch
+        # 0.01 = fast, got to 70% in 100 runs, peaked around 71%
+        # 0.005 71% 275 epochs at 100 batch size
+        # 0.001 slower than 0.005, peaks around 63% around 350 epochs
+        # 0.0005 again better than the above and below numbers, got to 63% around 350
+        # 0.0001 super slow 53% around 500
 
         # Layer arrays
         self.W1 = np.random.random_integers(-1, 1, (self.inputLayerSize, self.hiddenLayerSize))
