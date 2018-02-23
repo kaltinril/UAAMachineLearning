@@ -73,9 +73,9 @@ def validate(runNum):
 
 nn = ann.ANN()
 print("Learn Rate:", nn.learn)
-epocs = 200
+epocs = 20
 iterations = 10
-batch_size = 10
+batch_size = 16000
 for h in range(epocs):
     for j in range(0, iterations):
         for i in range(0, batch_size):
@@ -92,8 +92,8 @@ for h in range(epocs):
             y_letter = np.argmax(y)
             yhat_letter = np.argmax(yhat)
 
-            print("Yletter", y_letter)
-            print("yhatleter",yhat_letter)
+            #print("Yletter", y_letter)
+            #print("yhatleter",yhat_letter)
             
             # Store the values so we can create a 2D heat map
             # actual_vs_predicted[y_letter, yhat_letter] += 1

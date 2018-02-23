@@ -6,7 +6,7 @@ class ANN:
         self.inputLayerSize = 17
         self.hiddenLayerSize = 17
         self.outputLayerSize = 26
-        self.learn = 0.001
+        self.learn = 0.002
 
         # Layer arrays
         self.W1 = np.random.random_integers(-1, 1, (self.inputLayerSize, self.hiddenLayerSize))
