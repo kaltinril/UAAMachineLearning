@@ -1,12 +1,12 @@
 import numpy as np
 
 class ANN:
-    def __init__(self):
+    def __init__(self, input_size=17, hidden_size=21, output_size=26, learn=0.01):
         # Layer definitions
-        self.inputLayerSize = 17
-        self.hiddenLayerSize = 17
-        self.outputLayerSize = 26
-        self.learn = 0.01
+        self.inputLayerSize = input_size
+        self.hiddenLayerSize = hidden_size
+        self.outputLayerSize = output_size
+        self.learn = learn
         # 1 = errors
         # 0.1 = slow learning, peaks around 35% accuracy
         # 0.05 = 50% around 50, then just jumps between 49-51 for remainder of 500 batch
