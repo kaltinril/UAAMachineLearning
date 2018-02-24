@@ -13,6 +13,8 @@ data = data.values
 numberWrong = 0
 
 X = np.array(data[:, (range(1, cols))], dtype = float)
+
+
 X = np.insert(X,0,1,axis=1) # adding the bias
 Y_array = data[:, 0] # Snag the first column corresponding to the letter
 # Y = np.zeros([Y_array.shape[0], 26], dtype = int)
@@ -28,23 +30,26 @@ for i in range(1, 17):
 actual_vs_predicted = np.full((26,26), 0)
 
 
-nn = ann.ANN()
-print("Learn Rate:", nn.learn)
-
-
-def printStats(type, epochs, batchSize, wrong, mode, static):
-    total_rows = batchSize * epochs
+def calculate_accuracy(epochs, rows_in_epoch, wrong):
+    total_rows = rows_in_epoch * epochs
     percent_wrong = (wrong / total_rows) * 100
+    return 100 - percent_wrong
 
+
+def printStats(type, epochs, rows_in_epoch, wrong, mode, static):
+    total_rows = rows_in_epoch * epochs
+    percent_wrong = (wrong / total_rows) * 100
     if mode != 'simple':
         print()
         print(static, "MODE: ", type)
         print(static, "Epoch size:", epochs)
-        print(static, "Batch size:", batchSize)
+        print(static, "Rows in Epoch:", rows_in_epoch)
         print(static, "Number Wrong:", wrong)
         print(static, "Number possible:", total_rows)
         print(static, "Error percent:", percent_wrong,"%")
+
     print(static, "Accuracy percent:", (100 - percent_wrong),"%")
+    return 100 - percent_wrong
 
 
 def validate(runNum):
@@ -70,6 +75,7 @@ def validate(runNum):
             validation_errors += 1
 
     printStats('Validation', 1, validation_range, validation_errors, "simple", runNum)
+    return calculate_accuracy(1, validation_range, validation_errors)
 
 
 # 1 complete run through the entire1 16000 training set is 1 epoch
@@ -107,25 +113,61 @@ def run_ann(xin, yin, batch_start, batch_size):
     return total_wrong
 
 
-def run_epochs(epochs, xin, yin, batch_start, batch_size):
+def run_epochs(epochs, xin, yin, batch_start, batch_size, run_validations):
     total_overall_errors = 0
     for e in range(epochs):
         total_overall_errors += run_batches(xin, yin, batch_start, batch_size)
-        validate(str(e))
+        validate(str(e)) if run_validations else None
 
-    printStats('Training', epochs, len(xin), total_overall_errors, "", "")
+    printStats('Training', epochs, len(xin), total_overall_errors, "simple", "")
 
     return total_overall_errors
 
 
-run_epochs(500, X, Y, 0, 100)
+def find_optimal_hidden_layer(epochs, xin, yin, batch_start, batch_size):
+    global nn
+
+    outcomes = []  # [hiddenLayers][accuracyPercent]
+    input_nodes = 17
+    output_nodes = 26
+    tests_per_value = 3 # How many times to test the same results to average the results
+
+    # Loop from input node count to output node count
+    for nodes in range(input_nodes, output_nodes):
+        print("")
+        print("Processing with", nodes, "hidden nodes")
+        avg_acc = 0.0
+        for i in range(0, tests_per_value):
+            print("  Test# ", i)
+            nn = ann.ANN(input_nodes, nodes, output_nodes)
+            run_epochs(epochs, xin, yin, batch_start, batch_size, False)
+
+            # Test against the validation set of 4000
+            avg_acc += validate("  Nodes: " + str(nodes) + " - test: " + str(i))
+
+        outcomes.append((nodes, avg_acc / tests_per_value)) # store the averaged results incase weights negatively or positively overly affected it.
+
+    return outcomes
+
+
+nn = ann.ANN(17, 100, 26)
+print("Learn Rate:", nn.learn)
+
+# Run the first 16000 rows
+run_epochs(500, X[range(0, 16000), :], Y[range(0, 16000), :], 0, 100, True)
+
+
+#layer_results = find_optimal_hidden_layer(300, X[range(0, 16000), :], Y[range(0, 16000), :], 0, 100)
+# print(layer_results)
 
 # are the X values staying at 0?
 print("X bias average", np.average(X[:, 0]))
 
 actual_vs_predicted = np.full((26,26), 0)
 validate("end")
-plt.imshow(actual_vs_predicted, cmap='hot', interpolation='nearest')
+plt.imshow(actual_vs_predicted, cmap='gray', interpolation='nearest')
 plt.show()
 
 print(actual_vs_predicted)
+
+
