@@ -1,40 +1,68 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import sys
 import ann
-#np.set_printoptions(threshold=np.nan)
 
-# Load the file and define shape information
-data = pd.read_csv('./Letters.csv', header=None)
-rows = data.shape[0]
-cols = data.shape[1]
-split = int(rows * 0.80)
-print(split)
+learn = 0.01
+epochs = 500
+batch_size = 1000
+hidden_nodes = 100
+find_optimal = 0
+error_vs_epoch = []  # Create epoch vs error array
 
-data = data.values
+# Load parameters from command line if provided
+try:
+    learn = float(sys.argv[1]) if len(sys.argv) > 1 else learn
+    epochs = int(sys.argv[2]) if len(sys.argv) > 2 else epochs
+    batch_size = int(sys.argv[3]) if len(sys.argv) > 3 else batch_size
+    hidden_nodes = int(sys.argv[4]) if len(sys.argv) > 4 else hidden_nodes
+    find_optimal = int(sys.argv[5]) if len(sys.argv) > 5 else find_optimal
+except:
+    print("Error setting parameters from command line arguments")
+    print("usage: letter_ocr.py <learn> <epochs> <batch_size> <hidden_nodes> <find_optimal>")
+    print("Example: letter_ocr.py 0.01 500 100 100 0")
+    exit(1)
 
-# Rip off the X values (Features)
-X = np.array(data[:, (range(1, cols))], dtype=float)
+# Values to set
+if find_optimal == 1:
+    finding_optimal = True
+else:
+    finding_optimal = False
 
-# Normalizing each feature in X independently from the other features
-for i in range(0, X.shape[1]):
-    X[:, i] = (X[:, i] - X[:, i].min()) / (float(X[:, i].max()) - X[:, i].min())
 
-# adding the bias on the input
-X = np.append(X, np.ones((X.shape[0], 1)), axis=1)
+def load_and_process_file(filename, headers=None):
+    # Load the file and define shape information
+    data = pd.read_csv(filename, header=headers)
+    rows = data.shape[0]
+    cols = data.shape[1]
+    data = data.values
+    split = int(rows * 0.80)
 
-# Rip the Y's off the first column, which correspend to the letter value
-Y_array = data[:, 0]
+    # Rip off the X values (Features)
+    X = np.array(data[:, (range(1, cols))], dtype=float)
 
-# Identify the maximum number of output nodes based on the max possible outcomes
-# Assumes values are 1-N, if they are 0-(N-1) this will produce the wrong shape
-output_nodes = np.max(Y_array)
+    # Normalizing each feature in X independently from the other features
+    for i in range(0, X.shape[1]):
+        X[:, i] = (X[:, i] - X[:, i].min()) / (float(X[:, i].max()) - X[:, i].min())
 
-# Create an array with 0.1 for "NO" and 0.9 for "YES" for each of the output nodes
-# I.E. array of length 26 for letters A-Z, where 0.9 corresponds to the actual Letter index
-Y = np.full([Y_array.shape[0], output_nodes], 0.1)
-for i in range(Y_array.shape[0]):
-    Y[i, Y_array[i] - 1] = 0.9
+    # adding the bias on the input
+    X = np.append(X, np.ones((X.shape[0], 1)), axis=1)
+
+    # Rip the Y's off the first column, which correspend to the letter value
+    Y_array = data[:, 0]
+
+    # Identify the maximum number of output nodes based on the max possible outcomes
+    # Assumes values are 1-N, if they are 0-(N-1) this will produce the wrong shape
+    output_nodes = np.max(Y_array)
+
+    # Create an array with 0.1 for "NO" and 0.9 for "YES" for each of the output nodes
+    # I.E. array of length 26 for letters A-Z, where 0.9 corresponds to the actual Letter index
+    Y = np.full([Y_array.shape[0], output_nodes], 0.1)
+    for i in range(Y_array.shape[0]):
+        Y[i, Y_array[i] - 1] = 0.9
+
+    return data, rows, cols, split, X, Y, output_nodes
 
 
 def calculate_accuracy(epochs, rows_in_epoch, wrong):
@@ -59,30 +87,36 @@ def print_stats(type, epochs, rows_in_epoch, wrong, mode, static):
     return 100 - percent_wrong
 
 
-def validate(runNum, start_pos, validation_range):
+def validate(runNum, start_pos, validation_range, do_confusion, print_validation):
     # Quick validation at the next block
     validation_errors = 0
-    for i in range(start_pos, start_pos + validation_range):
-        # Fix the issue with Numpy array being (17,) instead of (1,17)
-        x = X[i].reshape(X[i].shape[0], 1).T
-        y = Y[i].reshape(Y[i].shape[0], 1).T
 
-        yhat = nn.foward(x)  # 1 row at a time
+    x = X[range(start_pos, start_pos + validation_range), :]
+    y = Y[range(start_pos, start_pos + validation_range), :]
 
-        # Get the max array index for the 0-25 array (What letter)
-        y_letter = np.argmax(y)
-        yhat_letter = np.argmax(yhat)
+    yhat = nn.foward(x)  # 1 row at a time
 
-        # Store the values so we can create a 2D heat map
-        actual_vs_predicted[y_letter, yhat_letter] += 1
+    # Get the max array index for the 0-25 array (What letter)
+    y_letter = np.argmax(y, axis=1)
+    yhat_letter = np.argmax(yhat, axis=1)
+    wrong_sum = y_letter - yhat_letter
+    validation_errors = (wrong_sum != 0).sum()
 
-        # If we were wrong, calculate that
-        if y_letter != yhat_letter:
-            validation_errors += 1
+    if do_confusion:
+        confusion_matrix = build_confusion_data(y_letter, yhat_letter)
+        save_confusion_matrix(confusion_matrix)
 
-    print_stats('Validation', 1, validation_range, validation_errors, "simple", runNum)
+    print_stats('Validation', 1, validation_range, validation_errors, "simple", runNum) if print_validation else None
+
     return calculate_accuracy(1, validation_range, validation_errors)
 
+
+def build_confusion_data(y, y_hat):
+    results = np.zeros((26, 26))
+    for i in range(len(y)):
+        results[y[i], y_hat[i]] += 1
+
+    return results
 
 # 1 complete run through the entire1 16000 training set is 1 epoch
 def run_batches(xin, yin, batch_start, batch_size):
@@ -123,9 +157,9 @@ def run_epochs(epochs, xin, yin, batch_start, batch_size, run_validations):
     total_overall_errors = 0
     for e in range(epochs):
         total_overall_errors += run_batches(xin, yin, batch_start, batch_size)
-        error_vs_epoch.append(100-validate(str(e), split, rows - split)) if run_validations else None
+        error_vs_epoch.append(100-validate(str(e), split, rows - split, False, False)) if run_validations else None
 
-    print_stats('Training', epochs, len(xin), total_overall_errors, "simple", "")
+    print_stats('Training', epochs, len(xin), total_overall_errors, "simple", "TRAINING:")
 
     return total_overall_errors
 
@@ -194,7 +228,7 @@ def show_error_plot(errors_array, flip=False, show_or_save="save"):
     plt.close()
 
 
-def create_confusion_matrix(data, show_or_save="save"):
+def save_confusion_matrix(data, show_or_save="save"):
     # Create the "heat map"
     plt.matshow(np.asarray(data), cmap='gray', interpolation='nearest')
 
@@ -212,30 +246,26 @@ def create_confusion_matrix(data, show_or_save="save"):
     plt.close()
 
 
-epochs = 50
-batch_size = 100
-finding_optimal = False
-actual_vs_predicted = np.zeros((26, 26))  # Create a 26x26 array for our heatmap
-error_vs_epoch = []  # Create epoch vs error array
+print("Loading file and setting up X and Y")
+data, rows, cols, split, X, Y, output_nodes = load_and_process_file("./Letters.csv")
 
 print("Creating Neural Network")
-nn = ann.ANN(X.shape[1], 100, output_nodes)
+nn = ann.ANN(X.shape[1], hidden_nodes, output_nodes, learn)
 print("Using Learn Rate:", nn.learn)
 
-# Run the first 16000 rows
-run_epochs(epochs, X[range(0, split), :], Y[range(0, split), :], 0, batch_size, True)
 
+# finding_optimal tries to identify what the best number of hidden layers to use is.
 if finding_optimal:
     layer_results = find_optimal_hidden_layer(epochs, X[range(0, split), :], Y[range(0, split), :], 0, batch_size, 1, 100)
     layer_results = np.asarray(layer_results)
     print(layer_results)
     print("Best hidden Layer Size:", np.argmax(layer_results[:, -1], axis=0))
+else:
+    run_epochs(epochs, X[range(0, split), :], Y[range(0, split), :], 0, batch_size, True)
 
 # Create a 26x26 array for our heatmap
 # Run 1 last validation to populate it, Generate a plot, and save it
-actual_vs_predicted = np.zeros((26, 26))
-final_accuracy = validate("end", split, rows - split)
-create_confusion_matrix(actual_vs_predicted)
+final_accuracy = validate("Final Validation", split, rows - split, True, True)
 
 # Save the error and accuracy plots
 show_error_plot(error_vs_epoch)  # Error vs epoch

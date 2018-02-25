@@ -18,8 +18,8 @@ class ANN:
         # Need to test with other values.
 
         # Layer arrays
-        self.W1 = np.random.random_integers(-1, 1, (self.inputLayerSize, self.hiddenLayerSize))
-        self.W2 = np.random.random_integers(-1, 1, (self.hiddenLayerSize+1, self.outputLayerSize))
+        self.W1 = np.random.uniform(-1, 1, (self.inputLayerSize, self.hiddenLayerSize))
+        self.W2 = np.random.uniform(-1, 1, (self.hiddenLayerSize+1, self.outputLayerSize))
         self.S1 = None
         self.S2 = None
         self.Z1 = None
