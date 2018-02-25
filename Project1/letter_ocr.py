@@ -7,9 +7,9 @@ import ann
 
 start_time = time.time()
 
-learn = 0.01
+learn = 0.5
 epochs = 500
-batch_size = 1
+batch_size = 100
 hidden_nodes = 100
 find_optimal = 0
 error_vs_epoch = []  # Create epoch vs error array
@@ -263,7 +263,6 @@ data, rows, cols, split, X, Y, output_nodes = load_and_process_file("./Letters.c
 
 print("Creating Neural Network")
 nn = ann.ANN(X.shape[1], hidden_nodes, output_nodes, learn)
-
 
 # finding_optimal tries to identify what the best number of hidden layers to use is.
 print("Running Training")
