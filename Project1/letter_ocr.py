@@ -2,11 +2,14 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import sys
+import time
 import ann
+
+start_time = time.time()
 
 learn = 0.01
 epochs = 500
-batch_size = 1000
+batch_size = 1
 hidden_nodes = 100
 find_optimal = 0
 error_vs_epoch = []  # Create epoch vs error array
@@ -40,7 +43,7 @@ def load_and_process_file(filename, headers=None):
     split = int(rows * 0.80)
 
     # Rip off the X values (Features)
-    X = np.array(data[:, (range(1, cols))], dtype=float)
+    X = np.array(data[:, (range(1, cols))], dtype=np.float64)
 
     # Normalizing each feature in X independently from the other features
     for i in range(0, X.shape[1]):
@@ -208,13 +211,15 @@ def show_error_plot(errors_array, flip=False, show_or_save="save"):
         errors_array = 100 - errors_array
         plt.title("Accuracy increase over epochs")
         plt.ylabel('Accuracy Percent')
+        label_text = "Final Accuracy: "
     else:
         filename = make_data_filename('png', '_error_vs_epoch', nn.learn, epochs, batch_size)
         plt.title("Error reduction over epochs")
         plt.ylabel('Error Percent')
+        label_text = "Final Error: "
 
     plt.xlabel('Epochs')
-    plt.annotate("Final Error: " + "{0:.1f}".format(errors_array[-1]) + "%",
+    plt.annotate(label_text + "{0:.1f}".format(errors_array[-1]) + "%",
                  xy=(len(errors_array), errors_array[-1]),
                  xytext=(int(len(errors_array) / 2), 50),
                  arrowprops=dict(facecolor='black', shrink=0.05), )
@@ -246,15 +251,22 @@ def save_confusion_matrix(data, show_or_save="save"):
     plt.close()
 
 
+print("Starting Neural Network Training and Validation")
+print("********* Runtime parameters ***********")
+print("Used Batch Size: " + str(batch_size))
+print("Used Epochs:     " + str(epochs))
+print("Used Learn Rate: " + str(learn))
+start_ann = time.time()
+
 print("Loading file and setting up X and Y")
 data, rows, cols, split, X, Y, output_nodes = load_and_process_file("./Letters.csv")
 
 print("Creating Neural Network")
 nn = ann.ANN(X.shape[1], hidden_nodes, output_nodes, learn)
-print("Using Learn Rate:", nn.learn)
 
 
 # finding_optimal tries to identify what the best number of hidden layers to use is.
+print("Running Training")
 if finding_optimal:
     layer_results = find_optimal_hidden_layer(epochs, X[range(0, split), :], Y[range(0, split), :], 0, batch_size, 1, 100)
     layer_results = np.asarray(layer_results)
@@ -263,10 +275,20 @@ if finding_optimal:
 else:
     run_epochs(epochs, X[range(0, split), :], Y[range(0, split), :], 0, batch_size, True)
 
+end_ann = time.time()  # Capture timing for calculations of how long different parts took
+
 # Create a 26x26 array for our heatmap
 # Run 1 last validation to populate it, Generate a plot, and save it
+print("Performing final validation")
 final_accuracy = validate("Final Validation", split, rows - split, True, True)
 
 # Save the error and accuracy plots
 show_error_plot(error_vs_epoch)  # Error vs epoch
 show_error_plot(error_vs_epoch, True)  # Accuracy vs epoch (Flipped error value to accuracy)
+
+end_program = time.time()
+print("")
+print("********* Runtime information **********")
+print("Total runtime: " + str(end_program - start_time))
+print("ANN Time:      " + str(end_ann - start_ann))
+print("Plotting:      " + str(end_program - end_ann))
