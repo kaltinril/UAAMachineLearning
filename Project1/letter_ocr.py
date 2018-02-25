@@ -7,24 +7,28 @@ import ann
 
 data = pd.read_csv('./letters.csv', header=None)
 
+
 rows = data.shape[0]
 cols = data.shape[1]
 data = data.values
 numberWrong = 0
 
-X = np.array(data[:, (range(1, cols))], dtype = float)
+#
 
+X = np.array(data[:, (range(1, cols))], dtype=float)
 
-X = np.insert(X,0,1,axis=1) # adding the bias
+# Normalizing each feature
+for i in range(0, 16):
+    X[:,i] = (X[:,i] - X[:,i].min()) / (float(X[:,i].max()) - X[:,i].min())
+
+# adding the bias on the input
+X = np.append(X, np.ones((X.shape[0], 1)), axis=1)
+
 Y_array = data[:, 0] # Snag the first column corresponding to the letter
 # Y = np.zeros([Y_array.shape[0], 26], dtype = int)
 Y = np.full([Y_array.shape[0], 26], 0.1)
 for i in range(Y_array.shape[0]):
     Y[i,Y_array[i] - 1] = 0.9
-
-# Normalizing each feature
-for i in range(1, 17):
-    X[:,i] = (X[:,i] - X[:,i].min()) / (float(X[:,i].max()) - X[:,i].min())
 
 # Create a 26x26 array for our heatmap
 actual_vs_predicted = np.full((26,26), 0)
@@ -150,11 +154,13 @@ def find_optimal_hidden_layer(epochs, xin, yin, batch_start, batch_size):
     return outcomes
 
 
-nn = ann.ANN(17, 100, 26)
+nn = ann.ANN(17, 17, 26)
 print("Learn Rate:", nn.learn)
 
 # Run the first 16000 rows
-run_epochs(500, X[range(0, 16000), :], Y[range(0, 16000), :], 0, 100, True)
+run_epochs(5, X[range(0, 16000), :], Y[range(0, 16000), :], 0, 10, True)
+
+print(nn.W1)
 
 
 #layer_results = find_optimal_hidden_layer(300, X[range(0, 16000), :], Y[range(0, 16000), :], 0, 100)
