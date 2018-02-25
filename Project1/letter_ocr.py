@@ -165,17 +165,21 @@ def make_data_filename(type_of_file, filename_part, learn_in, epochs_in, batch_s
 
 
 def show_error_plot(errors_array, flip=False, show_or_save="save"):
+
     # Change to "Accuracy" plot instead
     if flip:
+        filename = make_data_filename('png', '_accuracy_vs_epoch', nn.learn, epochs, batch_size)
+        # Convert to NP array so we can do easy matrix subtraction to convert the accuracy to error
+        errors_array = np.asarray(errors_array)
         errors_array = 100 - errors_array
         plt.title("Accuracy increase over epochs")
+        plt.ylabel('Accuracy Percent')
     else:
+        filename = make_data_filename('png', '_error_vs_epoch', nn.learn, epochs, batch_size)
         plt.title("Error reduction over epochs")
+        plt.ylabel('Error Percent')
 
     plt.xlabel('Epochs')
-    plt.ylabel('Error Percent')
-
-    #plt.text(len(errors_array), errors_array[-1], str(errors_array[-1]))
     plt.annotate("Final Error: " + "{0:.1f}".format(errors_array[-1]) + "%",
                  xy=(len(errors_array), errors_array[-1]),
                  xytext=(int(len(errors_array) / 2), 50),
@@ -183,11 +187,6 @@ def show_error_plot(errors_array, flip=False, show_or_save="save"):
     plt.plot(errors_array)
 
     if show_or_save == "save":
-        if flip:
-            filename = make_data_filename('png', '_accuracy_vs_epoch', nn.learn, epochs, batch_size)
-        else:
-            filename = make_data_filename('png', '_error_vs_epoch', nn.learn, epochs, batch_size)
-
         plt.savefig(filename, dpi=600)
     else:
         plt.show()
@@ -237,10 +236,6 @@ if finding_optimal:
 actual_vs_predicted = np.zeros((26, 26))
 final_accuracy = validate("end", split, rows - split)
 create_confusion_matrix(actual_vs_predicted)
-
-# Convert to NP array so we can do easy matrix subtraction to convert the accuracy to error
-error_vs_epoch = np.asarray(error_vs_epoch)
-error_vs_epoch = 100 - error_vs_epoch
 
 # Save the error and accuracy plots
 show_error_plot(error_vs_epoch)  # Error vs epoch
