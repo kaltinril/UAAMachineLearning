@@ -36,12 +36,6 @@ Y = np.full([Y_array.shape[0], output_nodes], 0.1)
 for i in range(Y_array.shape[0]):
     Y[i, Y_array[i] - 1] = 0.9
 
-# Create a 26x26 array for our heatmap
-actual_vs_predicted = np.zeros((26, 26))
-
-# Create epoch vs error array
-error_vs_epoch = []
-
 
 def calculate_accuracy(epochs, rows_in_epoch, wrong):
     total_rows = rows_in_epoch * epochs
@@ -174,10 +168,13 @@ def show_error_plot(errors_array, flip=False, show_or_save="save"):
     # Change to "Accuracy" plot instead
     if flip:
         errors_array = 100 - errors_array
+        plt.title("Accuracy increase over epochs")
+    else:
+        plt.title("Error reduction over epochs")
 
     plt.xlabel('Epochs')
     plt.ylabel('Error Percent')
-    plt.title("Error reduction over epochs")
+
     #plt.text(len(errors_array), errors_array[-1], str(errors_array[-1]))
     plt.annotate("Final Error: " + "{0:.1f}".format(errors_array[-1]) + "%",
                  xy=(len(errors_array), errors_array[-1]),
@@ -197,6 +194,7 @@ def show_error_plot(errors_array, flip=False, show_or_save="save"):
 
     plt.close()
 
+
 def create_confusion_matrix(data, show_or_save="save"):
     # Create the "heat map"
     plt.matshow(np.asarray(data), cmap='gray', interpolation='nearest')
@@ -215,9 +213,11 @@ def create_confusion_matrix(data, show_or_save="save"):
     plt.close()
 
 
-epochs = 500
+epochs = 50
 batch_size = 100
 finding_optimal = False
+actual_vs_predicted = np.zeros((26, 26))  # Create a 26x26 array for our heatmap
+error_vs_epoch = []  # Create epoch vs error array
 
 print("Creating Neural Network")
 nn = ann.ANN(X.shape[1], 100, output_nodes)
