@@ -39,6 +39,9 @@ for i in range(Y_array.shape[0]):
 # Create a 26x26 array for our heatmap
 actual_vs_predicted = np.zeros((26, 26))
 
+# Create epoch vs error array
+error_vs_epoch = []
+
 
 def calculate_accuracy(epochs, rows_in_epoch, wrong):
     total_rows = rows_in_epoch * epochs
@@ -126,14 +129,14 @@ def run_epochs(epochs, xin, yin, batch_start, batch_size, run_validations):
     total_overall_errors = 0
     for e in range(epochs):
         total_overall_errors += run_batches(xin, yin, batch_start, batch_size)
-        validate(str(e), split, rows - split) if run_validations else None
+        error_vs_epoch.append(100-validate(str(e), split, rows - split)) if run_validations else None
 
     print_stats('Training', epochs, len(xin), total_overall_errors, "simple", "")
 
     return total_overall_errors
 
 
-def find_optimal_hidden_layer(epochs, xin, yin, batch_start, batch_size):
+def find_optimal_hidden_layer(epochs, xin, yin, batch_start, batch_size, min_layer_size, max_layer_size):
     global nn
 
     outcomes = []  # [hiddenLayers][accuracyPercent]
@@ -142,7 +145,7 @@ def find_optimal_hidden_layer(epochs, xin, yin, batch_start, batch_size):
     tests_per_value = 3 # How many times to test the same results to average the results
 
     # Loop from input node count to output node count
-    for nodes in range(input_nodes, output_nodes):
+    for nodes in range(min_layer_size, max_layer_size):
         print("")
         print("Processing with", nodes, "hidden nodes")
         avg_acc = 0.0
@@ -152,32 +155,93 @@ def find_optimal_hidden_layer(epochs, xin, yin, batch_start, batch_size):
             run_epochs(epochs, xin, yin, batch_start, batch_size, False)
 
             # Test against the validation set of 4000
-            avg_acc += validate("  Nodes: " + str(nodes) + " - test: " + str(i))
+            avg_acc += validate("  Nodes: " + str(nodes) + " - test: " + str(i), split, rows - split)
 
         outcomes.append((nodes, avg_acc / tests_per_value)) # store the averaged results incase weights negatively or positively overly affected it.
 
     return outcomes
 
 
-nn = ann.ANN(X.shape[1], 17, output_nodes)
-print("Learn Rate:", nn.learn)
+# Use the global values ofr learn, iterations, and batch_size to generate a related filename prefix
+def make_data_filename(type_of_file, filename_part, learn_in, epochs_in, batch_size_in):
+    return "./runs/" + str(learn_in) + "_learn_" \
+           + str(epochs_in) + "_epochs_" \
+           + str(batch_size_in) + "_batch_" \
+           + str(filename_part) + "." + str(type_of_file)
+
+
+def show_error_plot(errors_array, flip=False, show_or_save="save"):
+    # Change to "Accuracy" plot instead
+    if flip:
+        errors_array = 100 - errors_array
+
+    plt.xlabel('Epochs')
+    plt.ylabel('Error Percent')
+    plt.title("Error reduction over epochs")
+    #plt.text(len(errors_array), errors_array[-1], str(errors_array[-1]))
+    plt.annotate("Final Error: " + "{0:.1f}".format(errors_array[-1]) + "%",
+                 xy=(len(errors_array), errors_array[-1]),
+                 xytext=(int(len(errors_array) / 2), 50),
+                 arrowprops=dict(facecolor='black', shrink=0.05), )
+    plt.plot(errors_array)
+
+    if show_or_save == "save":
+        if flip:
+            filename = make_data_filename('png', '_accuracy_vs_epoch', nn.learn, epochs, batch_size)
+        else:
+            filename = make_data_filename('png', '_error_vs_epoch', nn.learn, epochs, batch_size)
+
+        plt.savefig(filename, dpi=600)
+    else:
+        plt.show()
+
+    plt.close()
+
+def create_confusion_matrix(data, show_or_save="save"):
+    # Create the "heat map"
+    plt.matshow(np.asarray(data), cmap='gray', interpolation='nearest')
+
+    # Force the tick marks to be the letters A-Z
+    letters = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    plt.xticks(np.arange(len(letters)), letters)
+    plt.yticks(np.arange(len(letters)), letters)
+
+    if show_or_save == "save":
+        filename = make_data_filename('png', '_confusion_matrix', nn.learn, epochs, batch_size)
+        plt.savefig(filename, dpi=600)
+    else:
+        plt.show()
+
+    plt.close()
+
+
+epochs = 500
+batch_size = 100
+finding_optimal = False
+
+print("Creating Neural Network")
+nn = ann.ANN(X.shape[1], 100, output_nodes)
+print("Using Learn Rate:", nn.learn)
 
 # Run the first 16000 rows
-run_epochs(500, X[range(0, split), :], Y[range(0, split), :], 0, 100, True)
+run_epochs(epochs, X[range(0, split), :], Y[range(0, split), :], 0, batch_size, True)
 
-
-#layer_results = find_optimal_hidden_layer(300, X[range(0, 16000), :], Y[range(0, 16000), :], 0, 100)
-# print(layer_results)
-
-# are the X values staying at 0?
-print("X bias average", np.average(X[:, 0]))
+if finding_optimal:
+    layer_results = find_optimal_hidden_layer(epochs, X[range(0, split), :], Y[range(0, split), :], 0, batch_size, 1, 100)
+    layer_results = np.asarray(layer_results)
+    print(layer_results)
+    print("Best hidden Layer Size:", np.argmax(layer_results[:, -1], axis=0))
 
 # Create a 26x26 array for our heatmap
+# Run 1 last validation to populate it, Generate a plot, and save it
 actual_vs_predicted = np.zeros((26, 26))
-validate("end", split, rows - split)
-plt.imshow(actual_vs_predicted, cmap='gray', interpolation='nearest')
-plt.show()
+final_accuracy = validate("end", split, rows - split)
+create_confusion_matrix(actual_vs_predicted)
 
-print(actual_vs_predicted)
+# Convert to NP array so we can do easy matrix subtraction to convert the accuracy to error
+error_vs_epoch = np.asarray(error_vs_epoch)
+error_vs_epoch = 100 - error_vs_epoch
 
-
+# Save the error and accuracy plots
+show_error_plot(error_vs_epoch)  # Error vs epoch
+show_error_plot(error_vs_epoch, True)  # Accuracy vs epoch (Flipped error value to accuracy)
