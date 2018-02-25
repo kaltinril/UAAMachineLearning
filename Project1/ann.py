@@ -35,9 +35,7 @@ class ANN:
 
         self.S2 = np.dot(self.Z1, self.W2)
         self.Z2 = self.sigmoid(self.S2)
-        self.yhat = self.f_softmax(self.S2) # maybe not pass this back??
-
-        #print("S1 shape", self.S1.shape)
+        self.yhat = self.f_softmax(self.Z2)
         
         return self.yhat
 
@@ -76,18 +74,8 @@ class ANN:
         z1nobias = self.Z1[:, 0:-1]
 
         # Hidden Layer Delta
-        # i=1 (W2, Z2, D2)
-        # self.layers[i].D = W_nobias.dot(self.layers[i+1].D) * self.layers[i].Fp
         delta2 = w2nobias.dot(delta3) * self.sigmoid_prime(z1nobias).T
         print("D2: Hidden Delta shape: ", delta2.shape) if DEBUG else None
-
-        # Exclude bias column from delta calculation
-        w1nobias = self.W1[0:-1, :]
-        xnobias = X[:, 0:-1]
-
-        # Input Layer Delta
-        delta = w1nobias.dot(delta2) * self.sigmoid_prime(xnobias).T
-        print("D1: INput Delta shape: ", delta2.shape) if DEBUG else None
 
         print("W1 shape:",self.W1.shape) if DEBUG else None
         print("W2 shape:",self.W2.shape) if DEBUG else None
@@ -98,9 +86,6 @@ class ANN:
         
         print("DeltaWeight2", wc2.shape) if DEBUG else None
         print("DeltaWeight1", wc1.shape) if DEBUG else None
-        
-        
+
         self.W2 = self.W2 + wc2
         self.W1 = self.W1 + wc1
-
-
