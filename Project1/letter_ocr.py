@@ -1,37 +1,43 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import random
 import ann
 #np.set_printoptions(threshold=np.nan)
 
-data = pd.read_csv('./letters.csv', header=None)
-
-
+# Load the file and define shape information
+data = pd.read_csv('./Letters.csv', header=None)
 rows = data.shape[0]
 cols = data.shape[1]
+split = int(rows * 0.80)
+print(split)
+
 data = data.values
-numberWrong = 0
 
-#
-
+# Rip off the X values (Features)
 X = np.array(data[:, (range(1, cols))], dtype=float)
 
-# Normalizing each feature
-for i in range(0, 16):
-    X[:,i] = (X[:,i] - X[:,i].min()) / (float(X[:,i].max()) - X[:,i].min())
+# Normalizing each feature in X independently from the other features
+for i in range(0, X.shape[1]):
+    X[:, i] = (X[:, i] - X[:, i].min()) / (float(X[:, i].max()) - X[:, i].min())
 
 # adding the bias on the input
 X = np.append(X, np.ones((X.shape[0], 1)), axis=1)
 
-Y_array = data[:, 0] # Snag the first column corresponding to the letter
-# Y = np.zeros([Y_array.shape[0], 26], dtype = int)
-Y = np.full([Y_array.shape[0], 26], 0.1)
+# Rip the Y's off the first column, which correspend to the letter value
+Y_array = data[:, 0]
+
+# Identify the maximum number of output nodes based on the max possible outcomes
+# Assumes values are 1-N, if they are 0-(N-1) this will produce the wrong shape
+output_nodes = np.max(Y_array)
+
+# Create an array with 0.1 for "NO" and 0.9 for "YES" for each of the output nodes
+# I.E. array of length 26 for letters A-Z, where 0.9 corresponds to the actual Letter index
+Y = np.full([Y_array.shape[0], output_nodes], 0.1)
 for i in range(Y_array.shape[0]):
-    Y[i,Y_array[i] - 1] = 0.9
+    Y[i, Y_array[i] - 1] = 0.9
 
 # Create a 26x26 array for our heatmap
-actual_vs_predicted = np.full((26,26), 0)
+actual_vs_predicted = np.zeros((26, 26))
 
 
 def calculate_accuracy(epochs, rows_in_epoch, wrong):
@@ -40,7 +46,7 @@ def calculate_accuracy(epochs, rows_in_epoch, wrong):
     return 100 - percent_wrong
 
 
-def printStats(type, epochs, rows_in_epoch, wrong, mode, static):
+def print_stats(type, epochs, rows_in_epoch, wrong, mode, static):
     total_rows = rows_in_epoch * epochs
     percent_wrong = (wrong / total_rows) * 100
     if mode != 'simple':
@@ -56,11 +62,10 @@ def printStats(type, epochs, rows_in_epoch, wrong, mode, static):
     return 100 - percent_wrong
 
 
-def validate(runNum):
+def validate(runNum, start_pos, validation_range):
     # Quick validation at the next block
     validation_errors = 0
-    validation_range = 4000
-    for i in range(16000, 16000 + validation_range):
+    for i in range(start_pos, start_pos + validation_range):
         # Fix the issue with Numpy array being (17,) instead of (1,17)
         x = X[i].reshape(X[i].shape[0], 1).T
         y = Y[i].reshape(Y[i].shape[0], 1).T
@@ -74,11 +79,11 @@ def validate(runNum):
         # Store the values so we can create a 2D heat map
         actual_vs_predicted[y_letter, yhat_letter] += 1
 
-        # If we were wrong, calulcate that
+        # If we were wrong, calculate that
         if y_letter != yhat_letter:
             validation_errors += 1
 
-    printStats('Validation', 1, validation_range, validation_errors, "simple", runNum)
+    print_stats('Validation', 1, validation_range, validation_errors, "simple", runNum)
     return calculate_accuracy(1, validation_range, validation_errors)
 
 
@@ -121,9 +126,9 @@ def run_epochs(epochs, xin, yin, batch_start, batch_size, run_validations):
     total_overall_errors = 0
     for e in range(epochs):
         total_overall_errors += run_batches(xin, yin, batch_start, batch_size)
-        validate(str(e)) if run_validations else None
+        validate(str(e), split, rows - split) if run_validations else None
 
-    printStats('Training', epochs, len(xin), total_overall_errors, "simple", "")
+    print_stats('Training', epochs, len(xin), total_overall_errors, "simple", "")
 
     return total_overall_errors
 
@@ -154,13 +159,11 @@ def find_optimal_hidden_layer(epochs, xin, yin, batch_start, batch_size):
     return outcomes
 
 
-nn = ann.ANN(17, 17, 26)
+nn = ann.ANN(X.shape[1], 17, output_nodes)
 print("Learn Rate:", nn.learn)
 
 # Run the first 16000 rows
-run_epochs(5, X[range(0, 16000), :], Y[range(0, 16000), :], 0, 10, True)
-
-print(nn.W1)
+run_epochs(500, X[range(0, split), :], Y[range(0, split), :], 0, 100, True)
 
 
 #layer_results = find_optimal_hidden_layer(300, X[range(0, 16000), :], Y[range(0, 16000), :], 0, 100)
@@ -169,8 +172,9 @@ print(nn.W1)
 # are the X values staying at 0?
 print("X bias average", np.average(X[:, 0]))
 
-actual_vs_predicted = np.full((26,26), 0)
-validate("end")
+# Create a 26x26 array for our heatmap
+actual_vs_predicted = np.zeros((26, 26))
+validate("end", split, rows - split)
 plt.imshow(actual_vs_predicted, cmap='gray', interpolation='nearest')
 plt.show()
 

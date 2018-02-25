@@ -1,7 +1,7 @@
 import numpy as np
 
 class ANN:
-    def __init__(self, input_size=17, hidden_size=21, output_size=26, learn=0.01):
+    def __init__(self, input_size=16, hidden_size=21, output_size=26, learn=0.01):
         # Layer definitions
         self.inputLayerSize = input_size
         self.hiddenLayerSize = hidden_size
@@ -64,7 +64,6 @@ class ANN:
         print("Z2:",self.Z2.shape) if DEBUG else None
     
         # Output Layer Delta
-        # self.layers[-1].D = (yhat - labels).T
         delta3 = (self.Z2 - Y).T
         print("D3: Output Delta shape: ", delta3.shape) if DEBUG else None
         print("Z2SigPrim: ",self.sigmoid_prime(self.Z1).shape) if DEBUG else None
