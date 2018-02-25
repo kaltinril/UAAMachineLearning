@@ -7,7 +7,7 @@ import ann
 
 start_time = time.time()
 
-learn = 0.5
+learn = 0.01
 epochs = 500
 batch_size = 100
 hidden_nodes = 100
