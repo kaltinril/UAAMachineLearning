@@ -7,11 +7,12 @@ import ann
 
 start_time = time.time()
 
-learn = 0.01
+learn = 0.1
 epochs = 500
-batch_size = 100
+batch_size = 20
 hidden_nodes = 100
 find_optimal = 0
+print_epoch_validations = False
 error_vs_epoch = []  # Create epoch vs error array
 
 # Load parameters from command line if provided
@@ -160,7 +161,7 @@ def run_epochs(epochs, xin, yin, batch_start, batch_size, run_validations):
     total_overall_errors = 0
     for e in range(epochs):
         total_overall_errors += run_batches(xin, yin, batch_start, batch_size)
-        error_vs_epoch.append(100-validate(str(e), split, rows - split, False, False)) if run_validations else None
+        error_vs_epoch.append(100-validate(str(e), split, rows - split, False, print_epoch_validations)) if run_validations else None
 
     print_stats('Training', epochs, len(xin), total_overall_errors, "simple", "TRAINING:")
 
@@ -182,11 +183,11 @@ def find_optimal_hidden_layer(epochs, xin, yin, batch_start, batch_size, min_lay
         avg_acc = 0.0
         for i in range(0, tests_per_value):
             print("  Test# ", i)
-            nn = ann.ANN(input_nodes, nodes, output_nodes)
+            nn = ann.ANN(input_nodes, nodes, output_nodes, learn)
             run_epochs(epochs, xin, yin, batch_start, batch_size, False)
 
             # Test against the validation set of 4000
-            avg_acc += validate("  Nodes: " + str(nodes) + " - test: " + str(i), split, rows - split)
+            avg_acc += validate("  Nodes: " + str(nodes) + " - test: " + str(i), split, rows - split, False, False)
 
         outcomes.append((nodes, avg_acc / tests_per_value)) # store the averaged results incase weights negatively or positively overly affected it.
 
@@ -280,6 +281,7 @@ end_ann = time.time()  # Capture timing for calculations of how long different p
 # Run 1 last validation to populate it, Generate a plot, and save it
 print("Performing final validation")
 final_accuracy = validate("Final Validation", split, rows - split, True, True)
+overall_accuracy = validate("All Data Points Validation", 0, 20000, False, True)
 
 # Save the error and accuracy plots
 show_error_plot(error_vs_epoch)  # Error vs epoch

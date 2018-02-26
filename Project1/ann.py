@@ -64,7 +64,7 @@ class ANN:
         print("Z2:",self.Z2.shape) if DEBUG else None
     
         # Output Layer Delta
-        delta3 = (self.Z2 - Y).T
+        delta3 = (self.Z2 - Y) * self.sigmoid_prime(self.Z2)
         print("D3: Output Delta shape: ", delta3.shape) if DEBUG else None
         print("Z2SigPrim: ",self.sigmoid_prime(self.Z1).shape) if DEBUG else None
 
@@ -73,18 +73,16 @@ class ANN:
         z1nobias = self.Z1[:, 0:-1]
 
         # Hidden Layer Delta
-        delta2 = w2nobias.dot(delta3) * self.sigmoid_prime(z1nobias).T
+        delta2 = delta3.dot(w2nobias.T) * self.sigmoid_prime(z1nobias)
+        #delta2 = w2nobias.dot(delta3) * self.sigmoid_prime(z1nobias).T
         print("D2: Hidden Delta shape: ", delta2.shape) if DEBUG else None
 
         print("W1 shape:",self.W1.shape) if DEBUG else None
         print("W2 shape:",self.W2.shape) if DEBUG else None
         
         # Weight updates
-        wc2 = -self.learn * (delta3.dot(self.Z1)).T
-        wc1 = -self.learn * (delta2.dot(X)).T
-        
-        print("DeltaWeight2", wc2.shape) if DEBUG else None
-        print("DeltaWeight1", wc1.shape) if DEBUG else None
+        wc2 = -self.learn * (delta3.T.dot(self.Z1)).T
+        wc1 = -self.learn * (delta2.T.dot(X)).T
 
         self.W2 = self.W2 + wc2
         self.W1 = self.W1 + wc1
