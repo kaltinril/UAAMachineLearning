@@ -1,4 +1,4 @@
-
+import numpy as np
 
 '''
 csv_to_svm_converter
@@ -34,13 +34,12 @@ def build_feature_value(row):
 
 
 def convert_row(csv_row):
-    working_row = csv_row.split(',')  # Convert the CSV row into an array
     # Remove the first row (prediction) and the last row(filename)
-    prediction = str(working_row[0])
-    filename = "# " + str(working_row[-1])
-    working_row = working_row[1:-1]
+    prediction = str(csv_row[0])
+    filename = "# " + str(csv_row[-1])
+    working_row = csv_row[1:-1]
 
-    # Convert 0 to -1 in prediction, add a space after
+    # Convert 0 to -1 in prediction, add a space after either
     if prediction == '0':
         prediction = '-1 '
     else:
@@ -50,31 +49,48 @@ def convert_row(csv_row):
     working_row = build_feature_value(working_row)
 
     # Combine it all back together
-    svm_row = [prediction] + working_row + [filename]
+    svm_row = [prediction] + working_row + [filename] + ['\n']
 
     return svm_row
 
 
-def convert_file(input_filename, output_filename):
+def convert_file(input_filename, training_filename, validation_filename, split_percent=0.80):
     # Open Source and Destination files
-    input_file = open(input_filename, 'r')
-    output_file = open(output_filename, 'w')
+    print("Loading source input file")
+    input_file = np.genfromtxt(input_filename, delimiter=',', dtype=str)
+    training_file = open(training_filename, 'w')
+    validation_file = open(validation_filename, 'w')
 
-    # Loop over rows
-    for row in input_file:
-        # build svm formatted row
-        svm_row = convert_row(row)
+    # Randomize the data input
+    print("Shuffling the data")
+    np.random.shuffle(input_file)
 
-        # Save row to file
-        output_file.writelines(svm_row)
+    # Split the file into training and validation
+    print("Splitting the data into training and validation arrays")
+    split_point = int(len(input_file) * split_percent)
+    training_input = input_file[0:split_point, :]
+    validation_input = input_file[split_point:len(input_file), :]
 
-    # Close Files
-    input_file.close()
-    output_file.close()
+    # Loop over Training rows
+    print("Converting Training Rows")
+    for row in training_input:
+        svm_row = convert_row(row)  # build svm formatted row
+        training_file.writelines(svm_row)  # Save row to file
+
+    # Loop over Validation rows
+    print("Converting Validation Rows")
+    for row in validation_input:
+        svm_row = convert_row(row)  # build svm formatted row
+        validation_file.writelines(svm_row)  # Save row to file
+
+    # Close File
+    print("Cleaning up, closing files")
+    training_file.close()
+    validation_file.close()
 
 
 def main():
-    convert_file('aurora_histogram.csv', 'ah.svm')
+    convert_file('aurora_histogram.csv', 'ah_training.svm', 'ah_validate.svm')
 
 
 if __name__ == "__main__":
