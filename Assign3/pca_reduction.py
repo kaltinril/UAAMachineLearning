@@ -60,7 +60,7 @@ def run_pca(input_filename, output_filename):
 
 
 def print_help(script_name):
-    print("Usage:   " + script_name + " -f <filename> -a <serverAddress> -p <port> -e <error%>")
+    print("Usage:   " + script_name + " -o <output_filename> -i <input_filename>")
     print("")
     print(" -h, --help")
     print("    This message is printed only")
@@ -73,7 +73,7 @@ def print_help(script_name):
     print(" -d, --debug")
     print("    Turn debug mode on")
     print("")
-    print("Example: " + script_name + ' -o converted.csv')
+    print("Example: " + script_name + ' -i aurora.csv -o converted.csv')
 
 
 def load_arguments(argv):

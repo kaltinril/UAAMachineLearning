@@ -95,18 +95,18 @@ def convert_file(input_filename, training_filename, validation_filename, split_p
 
 
 def print_help(script_name):
-    print("Usage:   " + script_name + " -f <filename> -a <serverAddress> -p <port> -e <error%>")
+    print("Usage:   " + script_name + " -i <input_filename> -p <prefix>")
     print("")
     print(" -h, --help")
     print("    This message is printed only")
-    print(" -o, --outfile")
-    print("    Output file to save to")
-    print("    default: aurora_hist_pca.csv")
+    print(" -p, --prefix")
+    print("    Prefix to prepend to the output files")
+    print("    default: ah")
     print(" -i, --infile")
     print("    Input file of features")
     print("    default: aurora_histogram.csv")
     print("")
-    print("Example: " + script_name + ' -o converted.csv')
+    print("Example: " + script_name + ' -i aurora.csv -p ah_pca')
 
 
 def load_arguments(argv):
