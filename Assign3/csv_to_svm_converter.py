@@ -90,7 +90,7 @@ def convert_file(input_filename, training_filename, validation_filename, split_p
 
 
 def main():
-    convert_file('aurora_histogram.csv', 'ah_training.svm', 'ah_validate.svm')
+    convert_file('aurora_histogram.csv', 'ah_training2.svm', 'ah_validate2.svm')
 
 
 if __name__ == "__main__":

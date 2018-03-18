@@ -1,44 +1,39 @@
 import numpy as np
 from sklearn.decomposition import PCA
+import pandas as pd
 
-X = np.array([[-1, -1, 3], [-1, -2, -3], [1, -3, 2], [1, 1, -2], [-1, 2, 2], [1, 2, 1]])
-pca = PCA(.80)  #n_components=X.shape[1])
-pca.fit(X)
-X_pca = pca.transform(X)
-X_pca_reversed = pca.inverse_transform(X_pca)
-
-print(X_pca)
-print(X)
-print(X_pca_reversed)
-print(X - X_pca_reversed)
-print(np.average(X - X_pca_reversed, axis=0))
-print("hhhhhhh")
-
-print(pca.components_)
-print("dddddddddd")
-
-print(pca.explained_variance_)
-print(pca.explained_variance_ratio_)
+DEBUG = True
 
 
+def run_pca(data):
+    # Remove the first row (prediction) and the last row(filename)
+    predictions = data[:, 0].astype(str)    # Get the predictions out of the array
+    filenames = data[:, -1]                 # Get the filenames off the end of the array
+    working_data = data[:, 1:-1]            #.astype(float)    # Only snag rows 1 to last row
 
-def stuff():
-    # Sort X by the explained_variance_ratio
-    Y = pca.explained_variance_ratio_
+    # run it through PCA
+    pca = PCA(.95)                          # Only keep first N features that add up to cumulative 95% of the variance
+    pca.fit(working_data)                   # Fit the data
+    data_pca = pca.transform(working_data)  # Transform the data
 
-    Y = np.array(Y)
-    print("Y",Y)
-    print("X[0]",X[0])
-    indexes = Y.argsort()  # Return the index positions of the variance in ASCENDING order
-    indexes = np.flip(indexes, axis=0)  # Flip to convert to DESCENDING order of index positions
-    print("ind",indexes)
-    sorted_x = X.copy()
+    # Add the predictions and the filenames back onto the array
+    data_pca = np.c_[predictions, data_pca, filenames]
 
-    for i in range(len(sorted_x)):
-        sorted_x[i] = X[i][indexes]  # Use those indexes.
-
-    print("Sorted",sorted_x)
-    print("X", X)
+    return data_pca
 
 
-    print("singlevalues",pca.singular_values_)
+def main():
+    input_filename = "./aurora_histogram.csv"
+    output_filename = "./aurora_hist_pca.csv"
+
+    # Load file
+    data = pd.read_csv(input_filename, header=None)
+    data = data.values
+
+    # Run the PCA on the input to remove features (columns) that are not significant
+    transformed_data = run_pca(data)
+    np.savetxt(output_filename, transformed_data, fmt="%s", delimiter=',')
+
+
+if __name__ == "__main__":
+    main()
