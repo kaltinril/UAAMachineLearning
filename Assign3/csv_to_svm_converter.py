@@ -1,4 +1,6 @@
-import numpy as np
+import numpy as np          # Used for image and array manipulation
+import getopt               # Friendly command line options
+import sys                  # Used to get the sys.argv options
 
 '''
 csv_to_svm_converter
@@ -18,6 +20,9 @@ output:
         1 1:4 2:767 ... 768:2323 # c:\path\to\filename1.png
        -1 1:5 2:823 ... 768:4623 # c:\path\to\filename2.png
 '''
+
+DEFAULT_INPUT_FILENAME = "./aurora_histogram.csv"
+DEFAULT_OUTPUT_PREFIX = "ah"
 
 
 def build_feature_value(row):
@@ -89,9 +94,75 @@ def convert_file(input_filename, training_filename, validation_filename, split_p
     validation_file.close()
 
 
-def main():
-    convert_file('aurora_histogram.csv', 'ah_training2.svm', 'ah_validate2.svm')
+def print_help(script_name):
+    print("Usage:   " + script_name + " -f <filename> -a <serverAddress> -p <port> -e <error%>")
+    print("")
+    print(" -h, --help")
+    print("    This message is printed only")
+    print(" -o, --outfile")
+    print("    Output file to save to")
+    print("    default: aurora_hist_pca.csv")
+    print(" -i, --infile")
+    print("    Input file of features")
+    print("    default: aurora_histogram.csv")
+    print("")
+    print("Example: " + script_name + ' -o converted.csv')
+
+
+def load_arguments(argv):
+    script_name = argv[0]  # Snag the first argument (The script name)
+
+    # Default values for parameters/arguments
+    input_filename = DEFAULT_INPUT_FILENAME
+    prefix = DEFAULT_OUTPUT_PREFIX
+
+    # No reason to parse the options if there are none, just use the defaults
+    if len(argv) > 1:
+        try:
+            single_character_options = "hp:i:"  # : indicates a required value with the value
+            full_word_options = ["help", "prefix=", "infile="]
+
+            opts, remainder = getopt.getopt(argv[1:], single_character_options, full_word_options)
+        except getopt.GetoptError:
+            print("ERROR: Unable to get command line arguments!")
+            print_help(script_name)
+            sys.exit(2)
+
+        for opt, arg in opts:
+            print(opt, arg)
+            if opt in ("-h", "--help"):
+                print_help(script_name)
+                sys.exit(0)
+            elif opt in ("-p", "--prefix"):
+                prefix = arg
+            elif opt in ("-i", "--infile"):
+                input_filename = arg
+
+    print("Using parameters:")
+    print("Prefix:          ", prefix)
+    print("Input File:      ", input_filename)
+    print("")
+
+    return input_filename, prefix
+
+
+def main(argv):
+    print("PCA reduction on input file")
+    print("")
+
+    # Load all the arguments and return them
+    input_filename, prefix = load_arguments(argv)
+
+    # Build filenames for training and validation output
+    output_train_filename = prefix + "_training.svm"
+    output_valid_filename = prefix + "_validate.svm"
+
+    # Run the conversion to SVM format
+    convert_file(input_filename, output_train_filename, output_valid_filename)
+
+    print("")
+    print("Successfully completed, look for files", output_train_filename, output_valid_filename)
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv)
