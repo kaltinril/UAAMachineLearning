@@ -6,30 +6,39 @@ import time
 
 
 # Loop over all the activities, all the people, and all the samples and load the data.
+print("Building Filename List")
+start = time.clock()
 data = None
 y = None
+fnames = []
 for activity in range(1, 20):
-    start = time.clock()
-    print("Activity:", activity)
     for person in range(1, 9):
         for sample in range(1, 61):
-            row_data = pd.read_csv('./ClusteringData/data/a'
-                                   + format(activity, '02d')
-                                   + '/p' + str(person) + '/s'
-                                   + format(sample, '02d')
-                                   + '.txt', header=None).values
+            fnames.append('./ClusteringData/data/a'
+                          + format(activity, '02d')
+                          + '/p' + str(person) + '/s'
+                          + format(sample, '02d')
+                          + '.txt')
 
-            row_y = [activity, person, sample]
+end = time.clock()
+print("Elapsed Filename Building:", end - start)
+print('')
+print("Loading data")
+start = time.clock()
+arrays = [np.loadtxt(f, delimiter=',') for f in fnames]
+end = time.clock()
+print("Elapsed Loading Time:", end - start)
+print('')
 
-            if data is None:
-                data = row_data
-                y = row_y
-            else:
-                data = np.vstack((data, row_data))
-                y = np.vstack((y, row_y))
+print('Concatenating files data into a single array')
+start = time.clock()
+final_array = np.concatenate(arrays)
+end = time.clock()
+print("Elapsed Concatenating Time:", end - start)
+print('')
 
-    end = time.clock()
-    print("Elapsed:", end - start)
+print(final_array.shape)
 
-
-print(data.shape)
+fnames = None
+arrays = None
+final_array = None
