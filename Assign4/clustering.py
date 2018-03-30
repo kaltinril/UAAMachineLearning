@@ -11,7 +11,7 @@ def data2np(graph_data, format):
     fig = plt.figure()
     plot = fig.add_subplot(111)
 
-    fig.set_size_inches(9, 5)
+    fig.set_size_inches(15, 11)
 
     # Plot the data and draw the canvas
     plot.plot(graph_data, format)
@@ -80,6 +80,8 @@ def run_fft_psd():
 
     np.save('./fft_psd', final_fft_array)
 
+    return final_fft_array
+
 
 def load_fft_psd():
     final_fft_array = np.load('./fft_psd.npy')
@@ -100,9 +102,11 @@ def run_pca(fft_pca_data):
 
     np.save('./pca', pca)
 
-    pca = None
 
+# fft_psd = run_fft_psd() # Can't run this and PCA, get Memory Error
+#data = load_fft_psd()
+#run_pca(data)
 
-# run_fft_psd()
-data = load_fft_psd()
-run_pca(data)
+pca = np.load('./pca.npy')
+cv2.imshow('pca', data2np(pca, '-'))
+cv2.waitKey()
