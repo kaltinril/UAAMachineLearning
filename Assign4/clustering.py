@@ -16,56 +16,44 @@ def create_predictions(data_shape):
 
     return predictions
 
+def normalize_data(data):
+
+    for col in range(0, data.shape[1]):
+        column_data = data[:, col:col+1]
+        column_data = (column_data - column_data.min()) / (float(column_data.max()) - column_data.min())
+        data[:, col:col+1] = column_data
+
+    return data
 
 
 
+# Load the PCA'd data
 pca = np.load('./pca.npy')
+#predictions = create_predictions(pca.shape)
 
-predictions = create_predictions(pca.shape)
-print(predictions)
-print(predictions.shape)
-print(predictions[(24*60*63)])
+# Normalize it
+pca = normalize_data(pca)
+print(pca.shape)
 
-# Pick some Centroids
-a = pca[:, 3:4]
-b = pca[:, 7:8]
-c = pca[:, 9:10]
+k = 3
 
-# distance between two points in 1D
-d = pca-a
-e = pca-b
-f = pca-c
+# create n centroides by picking random values in each feature range (column)
+centroids = np.random.uniform(0, 1, (k, pca.shape[1]))
 
-# calculate the square a^2 for each 1D distance
-d = d * d
-e = e * e
-f = f * f
+print(centroids.shape)
 
-# a^2 + b^2 + c^2 (add all 1D squared distances)
-d = np.sum(d, axis=1, keepdims=True)
-e = np.sum(e, axis=1, keepdims=True)
-f = np.sum(f, axis=1, keepdims=True)
 
-# join the values
-h = np.hstack((d,e))
-h = np.hstack((h,f))
+# assign
+result = []
+for cent in range(0, centroids.shape[0]):
+    subtracted = pca - cent
+    normalized = np.linalg.norm(subtracted, axis=1)
+    result.append(normalized)
+    print(normalized.shape)
 
-print(h.shape)
+final_result = np.vstack(result)
+print(final_result.shape)
 
-# Find the max argument for each row
-i = np.argmax(h, axis=1)
+assignments = np.argmax(final_result, axis=0)
+print(assignments.shape)
 
-print(i.shape)
-print(d.shape)
-print(h[1:2,:])
-print(i[1:2])
-print(h[i[1:2]])
-print(h[2])
-print(h)
-
-j = h[i]
-
-print(j.shape)
-print(i)
-print(i.max())
-print(i.min())

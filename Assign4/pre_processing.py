@@ -53,10 +53,10 @@ def playing_with_psd():
 
 def perform_pca_reduction(data):
     # run it through PCA
-    pca = PCA(0.95)  # Only keep first N features that add up to cumulative 95% of the variance
-    pca.fit(data)                   # Fit the data
-    #pca_data = pca.fit_transform(data)
-    pca_data = pca.transform(data)  # Transform the data
+    pca = PCA(0.95, copy=False)  # Only keep first N features that add up to cumulative 95% of the variance
+    #pca.fit(data)                   # Fit the data
+    pca_data = pca.fit_transform(data)
+    #pca_data = pca.transform(data)  # Transform the data
 
     return pca_data
 
@@ -72,10 +72,14 @@ def run_fft_psd(input_array):
             f, Pxx_den = signal.periodogram(fft, 25)
             fft_array.append(Pxx_den)  # Leaves 63 rows from each "S##.txt" of 125 rows
 
-        # Combine the result back together
-        final_fft_array.append(np.vstack(fft_array).T)
 
-    final_fft_array = np.concatenate(final_fft_array)
+        # Combine the result back together
+        final_fft_array.append(np.hstack(fft_array))
+        #print(final_fft_array[0].shape)
+
+    final_fft_array = np.vstack(final_fft_array)
+
+    print(final_fft_array.shape)
 
     np.save('./fft_psd', final_fft_array)
 
