@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import matplotlib.pyplot as plt
 
 
 def create_predictions(data_shape):
@@ -29,13 +30,14 @@ def normalize_data(data):
 
 # Load the PCA'd data
 pca = np.load('./pca.npy')
+pca = np.loadtxt('./SyntheticData.txt')
 #predictions = create_predictions(pca.shape)
 
 # Normalize it
 pca = normalize_data(pca)
 print(pca.shape)
 
-k = 3
+k = 8
 
 # create n centroides by picking random values in each feature range (column)
 centroids = np.random.uniform(0, 1, (k, pca.shape[1]))
@@ -43,10 +45,11 @@ centroids = np.random.uniform(0, 1, (k, pca.shape[1]))
 print(centroids.shape)
 
 
+
 # assign
 result = []
 for cent in range(0, centroids.shape[0]):
-    subtracted = pca - cent
+    subtracted = pca - centroids[cent,:]
     normalized = np.linalg.norm(subtracted, axis=1)
     result.append(normalized)
     print(normalized.shape)
@@ -57,3 +60,8 @@ print(final_result.shape)
 assignments = np.argmax(final_result, axis=0)
 print(assignments.shape)
 
+
+centroid_labels = np.random.uniform(0, 1, pca.shape[0])
+
+plt.scatter(pca[:,0], pca[:,1], c=assignments, cmap='rainbow')
+plt.show()
