@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
+import sys
 
 
 def create_predictions(data_shape):
@@ -17,6 +18,7 @@ def create_predictions(data_shape):
 
     return predictions
 
+
 def normalize_data(data):
 
     for col in range(0, data.shape[1]):
@@ -27,41 +29,72 @@ def normalize_data(data):
     return data
 
 
+def load_data(filename='./SyntheticData.txt', type='txt'):
+    # Load the PCA'd data
 
-# Load the PCA'd data
-pca = np.load('./pca.npy')
-pca = np.loadtxt('./SyntheticData.txt')
-#predictions = create_predictions(pca.shape)
+    if type == 'txt':
+        data = np.loadtxt(filename)
+    elif type == 'npy':
+        data = np.load(filename)
+    else:
+        print('ERROR: Unknown file type! ', type)
+        sys.exit(1)
 
-# Normalize it
-pca = normalize_data(pca)
-print(pca.shape)
-
-k = 8
-
-# create n centroides by picking random values in each feature range (column)
-centroids = np.random.uniform(0, 1, (k, pca.shape[1]))
-
-print(centroids.shape)
+    # Normalize it
+    return normalize_data(data)
 
 
+def adjust_cluster_center(data, centroids, assignments):
+    for cent in range(0, centroids.shape[0]):
 
-# assign
-result = []
-for cent in range(0, centroids.shape[0]):
-    subtracted = pca - centroids[cent,:]
-    normalized = np.linalg.norm(subtracted, axis=1)
-    result.append(normalized)
-    print(normalized.shape)
+        mask = (assignments == cent)
+        cluster = data[mask]
 
-final_result = np.vstack(result)
-print(final_result.shape)
-
-assignments = np.argmax(final_result, axis=0)
-print(assignments.shape)
+        if cluster is not None and len(cluster) > 0:
+            centroids[cent, :] = np.mean(cluster, axis=0)
+        else:
+            # No points, re-assign the centroid
+            centroids[cent, :] = np.random.uniform(0, 1, (1, data.shape[1]))
 
 
-centroid_labels = np.random.uniform(0, 1, pca.shape[0])
 
-plt.scatter(pca[:,0], pca[:,1], c=assignments, cmap='rainbow')
-plt.show()
+
+
+def assign_clusters(data, centroids):
+    # assign
+    result = []
+    for cent in range(0, centroids.shape[0]):
+        subtracted = data - centroids[cent, :]
+        normalized = np.linalg.norm(subtracted, axis=1)
+        result.append(normalized)
+
+    final_result = np.vstack(result)
+    print('final_result', final_result.shape)
+
+    assignments = np.argmin(final_result, axis=0)
+    print(assignments.shape)
+
+    return assignments
+
+
+def display_results(data, centroids, assignments):
+    plt.scatter(data[:, 0], data[:, 1], c=assignments, cmap='rainbow')
+    plt.scatter(centroids[:, 0], centroids[:, 1], color='black')
+    plt.show()
+
+def run_clustering(data, k=2):
+    # create n centroides by picking random values in each feature range (column)
+    centroids = np.random.uniform(0, 1, (k, data.shape[1]))
+    print(centroids.shape)
+
+    assignments = []
+    for i in range(0, 10):
+        assignments = assign_clusters(data, centroids)
+        adjust_cluster_center(data, centroids, assignments)
+
+    display_results(data, centroids, assignments)
+
+loaded_data = load_data(filename='./SyntheticData.txt', type='txt')
+run_clustering(loaded_data, 8)
+
+
