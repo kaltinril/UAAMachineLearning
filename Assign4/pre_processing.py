@@ -76,12 +76,18 @@ def run_fft_psd(input_array):
         fft_array = np.reshape(pxx_den, (1, pxx_den.shape[0] * pxx_den.shape[1]))
         final_fft_array.append(fft_array)
 
+        # cv2.imshow('fft', data2np(fft[:, 0:1], 'b-'))
+        # cv2.imshow('periodgram', data2np(pxx_den[:, 0:1], 'g-'))
+        # cv2.imshow('periodgram2', data2np(pxx_den2[:, 0:1], 'g-'))
+        # cv2.waitKey()
+
     # Stack each "Sample" on-top of each-other.
+    print(len(final_fft_array))
     final_fft_array = np.vstack(final_fft_array)
     print('Final Shape', final_fft_array.shape)
 
     # Save the data off, because we get MEMORY errors
-    np.save('./fft_psd', final_fft_array)
+    np.save('./fft_psd1', final_fft_array)
 
     return final_fft_array
 
@@ -109,12 +115,12 @@ def normalize_data(data):
     return data
 
 
-# start = time.time()
-# input_array = np.load('./data_combined.npy')
-# input_array = normalize_data(input_array)
-# data = run_fft_psd(input_array)  # Can't run this and PCA, get Memory Error
-# end = time.time()
-# print('Total time for FFT and PSD', end-start)
+start = time.time()
+input_array = np.load('./data_combined.npy')
+input_array = normalize_data(input_array)
+data = run_fft_psd(input_array)  # Can't run this and PCA, get Memory Error
+end = time.time()
+print('Total time for FFT and PSD', end-start)
 
 start = time.time()
 data = load_fft_psd()
