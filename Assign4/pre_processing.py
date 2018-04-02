@@ -4,6 +4,7 @@ import cv2
 from scipy import signal
 from sklearn.decomposition import PCA
 from sklearn.decomposition import TruncatedSVD
+import time
 
 
 def data2np(graph_data, format):
@@ -64,23 +65,22 @@ def perform_pca_reduction(data):
 def run_fft_psd(input_array):
     final_fft_array = []
     for sample_start in range(0, input_array.shape[0], 125):
-        fft_array = []
-        for col in range(0, input_array.shape[1]):
+        # Generate the Fast Fourier Transform
+        fft = np.fft.fft(input_array[sample_start:sample_start+125, :], axis=0)
+        fft = np.real(fft[1:125, :])  # Strip off the first feature, as it's always weird
 
-            result = np.fft.fft(input_array[sample_start:sample_start+125, col:col+1].flatten())
-            fft = np.real(result[1:125]).T  # Strip off the first feature, as it's always weird
-            f, Pxx_den = signal.periodogram(fft, 25)
-            fft_array.append(Pxx_den)  # Leaves 63 rows from each "S##.txt" of 125 rows
+        # Calculate the PSD (Power Spectral Density)
+        f, pxx_den = signal.periodogram(fft, 25, axis=0)
 
+        # Combine all the rows into a single row
+        fft_array = np.reshape(pxx_den, (1, pxx_den.shape[0] * pxx_den.shape[1]))
+        final_fft_array.append(fft_array)
 
-        # Combine the result back together
-        final_fft_array.append(np.hstack(fft_array))
-        #print(final_fft_array[0].shape)
-
+    # Stack each "Sample" on-top of each-other.
     final_fft_array = np.vstack(final_fft_array)
+    print('Final Shape', final_fft_array.shape)
 
-    print(final_fft_array.shape)
-
+    # Save the data off, because we get MEMORY errors
     np.save('./fft_psd', final_fft_array)
 
     return final_fft_array
@@ -93,12 +93,6 @@ def load_fft_psd():
 
 
 def run_pca(fft_pca_data):
-
-    #print("Split the training and validation")
-    split_at = int(fft_pca_data.shape[0] * .8)
-    #training = final_fft_array[0:split_at, :]
-    #validation = final_fft_array[split_at:, :]
-
     pca = perform_pca_reduction(fft_pca_data)
     print(len(pca))
     print(pca.shape)
@@ -107,7 +101,6 @@ def run_pca(fft_pca_data):
 
 
 def normalize_data(data):
-
     for col in range(0, data.shape[1]):
         column_data = data[:, col:col+1]
         column_data = (column_data - column_data.min()) / (float(column_data.max()) - column_data.min())
@@ -116,15 +109,19 @@ def normalize_data(data):
     return data
 
 
-#input_array = np.load('./data_combined.npy')
-#input_array = normalize_data(input_array)
-#fft_psd = run_fft_psd(input_array)  # Can't run this and PCA, get Memory Error
-#data = None
-#fft_psd = None
+# start = time.time()
+# input_array = np.load('./data_combined.npy')
+# input_array = normalize_data(input_array)
+# data = run_fft_psd(input_array)  # Can't run this and PCA, get Memory Error
+# end = time.time()
+# print('Total time for FFT and PSD', end-start)
 
+start = time.time()
 data = load_fft_psd()
 data = normalize_data(data)
 run_pca(data)
+end = time.time()
+print('Total time for PCA', end-start)
 
 pca = np.load('./pca.npy')
 cv2.imshow('pca', data2np(pca, '-'))
