@@ -3,6 +3,7 @@ import cv2
 import matplotlib.pyplot as plt
 import sys
 import time
+from sklearn.metrics.pairwise import cosine_similarity
 
 
 def create_predictions(data_shape):
@@ -60,33 +61,43 @@ def adjust_cluster_center(data, centroids, assignments):
     return centroids
 
 
-def assign_clusters(data, centroids):
-    # assign
-    result = []
+def assign_clusters(data, centroids, distance_method='eclud'):
+
+    if distance_method == 'eclud':
+        result = ecludian_distance(data, centroids)
+        assignments = np.argmin(result, axis=0)
+    elif distance_method == 'cossim':
+        result = cos_sim(data, centroids)
+        assignments = np.argmax(result, axis=0)
+    else:
+        print("ERROR: Invalid distance method", distance_method)
+        sys.exit(1)
+
+    return assignments
+
+def ecludian_distance(data, centroids):
     final_result = np.empty((centroids.shape[0], data.shape[0]))
     for cent in range(0, centroids.shape[0]):
         subtracted = data - centroids[cent, :]
         normalized = np.linalg.norm(subtracted, axis=1)
         final_result[cent, :] = normalized
-        #result.append(normalized)
 
-    #final_result = np.vstack(result)
-    assignments = np.argmin(final_result, axis=0)
+    return final_result
 
-    return assignments
 
-def assign_clusters_orig(data, centroids):
-    # assign
-    result = []
+def cos_sim(data, centroids):
+    final_result = np.empty((centroids.shape[0], data.shape[0]))
     for cent in range(0, centroids.shape[0]):
-        subtracted = data - centroids[cent, :]
-        normalized = np.linalg.norm(subtracted, axis=1)
-        result.append(normalized)
+        c = centroids[cent, :]
+        top = np.sum(data * c, axis=1)
+        bottom_x = np.linalg.norm(data, axis=1)
+        bottom_c = np.linalg.norm(c)
+        result = top / bottom_x * bottom_c
 
-    final_result = np.vstack(result)
-    assignments = np.argmin(final_result, axis=0)
+        final_result[cent, :] = result
 
-    return assignments
+    return cosine_similarity(data, centroids).T
+
 
 def display_results(data, centroids, assignments):
     plt.scatter(data[:, 0], data[:, 1], c=assignments, cmap='rainbow')
@@ -95,7 +106,7 @@ def display_results(data, centroids, assignments):
 
 
 def still_changes(old_centroids, current_centroids, attempts):
-    if np.array_equal(old_centroids, current_centroids) or attempts > 100:
+    if np.array_equal(old_centroids, current_centroids): # or attempts > 900:
         return False
     else:
         return True
@@ -158,11 +169,6 @@ def run_clustering(data, k=2):
             assignments = assign_clusters(data, centroids)
             total_assign += time.time() - assign_start
 
-
-            assign_start = time.time()
-            assignments = assign_clusters_orig(data, centroids)
-            total_assign += time.time() - assign_start
-
             cent_start = time.time()
             centroids = adjust_cluster_center(data, centroids, assignments)
             total_cent += time.time() - cent_start
@@ -194,10 +200,10 @@ def run_clustering(data, k=2):
         attempts = 0
 
     print("Attempts", total_attempts)
-    # display_results(data, best_centroids, best_assignments)
+    display_results(data, best_centroids, best_assignments)
 
-#loaded_data = load_data(filename='./SyntheticData.txt', type='txt')
-loaded_data = load_data(filename='./pca.npy', type='npy')
-run_clustering(loaded_data, 3)
+loaded_data = load_data(filename='./SyntheticData.txt', type='txt')
+#loaded_data = load_data(filename='./pca.npy', type='npy')
+run_clustering(loaded_data, 8)
 
 
