@@ -9,10 +9,9 @@ from scipy import spatial
 
 def create_predictions(data_shape):
     predictions = np.zeros((data_shape[0], 4), dtype=int)
-
-    sedentary = [1,2,3,4,7,8]
-    active = [5,6,9,10,11]
-    excersize = [12,13,14,15,16,17,18,19]
+    sedentary = [1, 2, 3, 4, 7, 8]
+    active = [5, 6, 9, 10, 11]
+    excersize = [12, 13, 14, 15, 16, 17, 18, 19]
     cluster = 0
 
     for i in range(0, predictions.shape[0]):
@@ -36,7 +35,6 @@ def create_predictions(data_shape):
 
 
 def normalize_data(data):
-
     for col in range(0, data.shape[1]):
         column_data = data[:, col:col+1]
         column_data = (column_data - column_data.min()) / (float(column_data.max()) - column_data.min())
@@ -76,7 +74,6 @@ def adjust_cluster_center(data, centroids, assignments):
 
 
 def assign_clusters(data, centroids, distance_method='cossim'):
-
     if distance_method == 'eclud':
         result = ecludian_distance(data, centroids)
         assignments = np.argmin(result, axis=0)
@@ -88,6 +85,7 @@ def assign_clusters(data, centroids, distance_method='cossim'):
         sys.exit(1)
 
     return assignments
+
 
 def ecludian_distance(data, centroids):
     final_result = np.empty((centroids.shape[0], data.shape[0]))
@@ -107,8 +105,6 @@ def cos_sim(data, centroids):
 
         final_result[cent, :] = result
 
-    #final_result = cosine_similarity(data, centroids).T
-
     return final_result
 
 
@@ -120,6 +116,7 @@ def cossim_single(data, c):
 
     return result
 
+
 def display_results(data, centroids, assignments):
     plt.scatter(data[:, 0], data[:, 1], c=assignments, cmap='rainbow')
     plt.scatter(centroids[:, 0], centroids[:, 1], color='black')
@@ -128,9 +125,7 @@ def display_results(data, centroids, assignments):
 
 def still_changes(old_centroids, current_centroids, attempts):
     subtracted = np.sum(np.absolute(np.absolute(old_centroids) - np.absolute(current_centroids)))
-    #print(attempts, np.sum(np.absolute(old_centroids)), np.sum(np.absolute(current_centroids)), subtracted)
 
-    #print(subtracted)
     if np.array_equal(old_centroids, current_centroids) or attempts > 2000 or subtracted < 0.1:
         return False
     else:
@@ -153,7 +148,6 @@ def min_coherence(data, centroids, assignments):
 
 
 def max_separation(centroids):
-
     k = centroids.shape[0]
     dist = 0
     for cent in range(0, k):
@@ -182,9 +176,6 @@ def mean_entropy(data, centroids, assignments, prediction):
 
     return np.sum(result)
 
-def calc_cluster_entropy(counts):
-    return -()
-
 
 def run_clustering(data, prediction, k=2):
     # create n centroides by picking random values in each feature range (column)
@@ -198,7 +189,6 @@ def run_clustering(data, prediction, k=2):
     best_centroids = np.copy(centroids)
     best_assignments = []
     best_coherence = 100000000
-    coherence = best_coherence - 1
     tries = 0
     best_seperation = 0
     max_tries = 5
@@ -218,32 +208,29 @@ def run_clustering(data, prediction, k=2):
 
             attempts += 1
 
-            #display_results(data, centroids, assignments)
-
         coherence = min_coherence(data, centroids, assignments)
-        seperation = max_separation(centroids)
+        separation = max_separation(centroids)
 
         entropy = mean_entropy(data, centroids, assignments, prediction)
         print('Entropy', entropy)
 
-        if coherence < best_coherence and seperation > best_seperation:
+        if coherence < best_coherence and separation > best_seperation:
             best_centroids = np.copy(centroids)
             best_assignments = np.copy(assignments)
             best_coherence = coherence
-            best_seperation = seperation
+            best_seperation = separation
             tries = 0
         else:
             tries += 1
 
-        # Randomly move 2 centroids
+        # Randomly move total_centroids / 3
         moves = int(centroids.shape[0] / 3)
-        print(moves)
         centroids_to_move = np.random.randint(0, centroids.shape[0], moves)
         for move in range(0, moves):
             value = np.random.uniform(0, 1, (1, data.shape[1]))
             centroids[centroids_to_move[move], :] = value
 
-        print("Attempts", attempts, ' tries left', max_tries - tries, ' assign time', total_assign, ' cent time', total_cent)
+        print("Attempts:", attempts, ' tries left:', max_tries - tries, ' assign time', total_assign, ' cent time', total_cent)
         total_attempts += attempts
         attempts = 0
 
@@ -255,26 +242,11 @@ def run_clustering(data, prediction, k=2):
     print('Entropy', entropy)
 
 
-
-
 d = np.array([[5, 10]])
 c = np.array([1, 4])
 
-value = 1 - cossim_single(d, c)
-print(value)
-value = spatial.distance.cosine(d, c)
-print(value)
-
-
-#loaded_data = load_data(filename='./SyntheticData.txt', type='txt')
 loaded_data = load_data(filename='./pca.npy', type='npy')
 
-
-
-#print(result)
-#print(result.shape)
-
-print("cossim")
 predictions = create_predictions(loaded_data.shape)
 all_activities = predictions[:, 0]
 three_cluster = predictions[:, 3]

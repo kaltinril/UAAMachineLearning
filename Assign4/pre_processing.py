@@ -28,36 +28,10 @@ def data2np(graph_data, format):
     return data
 
 
-def playing_with_psd():
-    x = np.arange(0, 100, 0.1)
-    y = np.sin(x)
-    #result = np.fft.fft(y)
-    result = np.fft.fft(final_array[0:125, 0:1].flatten())
-    #real_result = np.real(result)
-    real_result = np.real(result)
-    second_result = signal.periodogram(real_result[1:125], 25)
-
-    cv2.imshow('orig', data2np(final_array[0:125, 0:1], 'r-'))
-    cv2.imshow('fft', data2np(real_result[1:125], 'b-'))
-    cv2.imshow('periodgram', data2np(second_result, 'g-'))
-    cv2.waitKey()
-
-    f, Pxx_den = signal.periodogram(real_result[1:125], 25)
-
-    print(len(Pxx_den), f)
-    plt.semilogy(f, Pxx_den)
-    plt.ylim([1e-7, 1e2])
-    plt.xlabel('frequency [Hz]')
-    plt.ylabel('PSD [V**2/Hz]')
-    plt.show()
-
-
 def perform_pca_reduction(data):
     # run it through PCA
     pca = PCA(0.95, copy=False)  # Only keep first N features that add up to cumulative 95% of the variance
-    #pca.fit(data)                   # Fit the data
     pca_data = pca.fit_transform(data)
-    #pca_data = pca.transform(data)  # Transform the data
 
     return pca_data
 
@@ -76,13 +50,11 @@ def run_fft_psd(input_array):
         fft_array = np.reshape(pxx_den, (1, pxx_den.shape[0] * pxx_den.shape[1]))
         final_fft_array.append(fft_array)
 
-        cv2.imshow('fft', data2np(fft[:, 0:1], 'b-'))
-        cv2.imshow('periodgram', data2np(pxx_den[:, 0:1], 'g-'))
-        #cv2.imshow('periodgram2', data2np(pxx_den2[:, 0:1], 'g-'))
-        cv2.waitKey()
+        # cv2.imshow('fft', data2np(fft[:, 0:1], 'b-'))
+        # cv2.imshow('periodgram', data2np(pxx_den[:, 0:1], 'g-'))
+        # cv2.waitKey()
 
     # Stack each "Sample" on-top of each-other.
-    print(len(final_fft_array))
     final_fft_array = np.vstack(final_fft_array)
     print('Final Shape', final_fft_array.shape)
 
@@ -107,7 +79,6 @@ def run_pca(fft_pca_data):
 
 
 def normalize_data(data):
-
     print('first', data[0])
     for col in range(0, data.shape[1]):
         column_data = data[:, col:col+1]
@@ -122,12 +93,12 @@ def normalize_data(data):
 start = time.time()
 input_array = np.load('./data_combined.npy')
 input_array = normalize_data(input_array)
-data = run_fft_psd(input_array)  # Can't run this and PCA, get Memory Error
+data = run_fft_psd(input_array)  # Can't run this and PCA, get Memory Error, have 32 bit python
 end = time.time()
 print('Total time for FFT and PSD', end-start)
 
 start = time.time()
-#data = load_fft_psd()
+data = load_fft_psd()
 data = normalize_data(data)
 run_pca(data)
 end = time.time()
