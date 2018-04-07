@@ -76,10 +76,10 @@ def run_fft_psd(input_array):
         fft_array = np.reshape(pxx_den, (1, pxx_den.shape[0] * pxx_den.shape[1]))
         final_fft_array.append(fft_array)
 
-        # cv2.imshow('fft', data2np(fft[:, 0:1], 'b-'))
-        # cv2.imshow('periodgram', data2np(pxx_den[:, 0:1], 'g-'))
-        # cv2.imshow('periodgram2', data2np(pxx_den2[:, 0:1], 'g-'))
-        # cv2.waitKey()
+        cv2.imshow('fft', data2np(fft[:, 0:1], 'b-'))
+        cv2.imshow('periodgram', data2np(pxx_den[:, 0:1], 'g-'))
+        #cv2.imshow('periodgram2', data2np(pxx_den2[:, 0:1], 'g-'))
+        cv2.waitKey()
 
     # Stack each "Sample" on-top of each-other.
     print(len(final_fft_array))
@@ -107,10 +107,14 @@ def run_pca(fft_pca_data):
 
 
 def normalize_data(data):
+
+    print('first', data[0])
     for col in range(0, data.shape[1]):
         column_data = data[:, col:col+1]
         column_data = (column_data - column_data.min()) / (float(column_data.max()) - column_data.min())
         data[:, col:col+1] = column_data
+
+    print('first-after', data[0])
 
     return data
 
@@ -123,7 +127,7 @@ end = time.time()
 print('Total time for FFT and PSD', end-start)
 
 start = time.time()
-data = load_fft_psd()
+#data = load_fft_psd()
 data = normalize_data(data)
 run_pca(data)
 end = time.time()
