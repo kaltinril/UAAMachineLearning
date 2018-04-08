@@ -1,0 +1,114 @@
+C:\Python\Python3\python.exe "C:/Users/thisisme1/Documents/CSCE415 - ML/Assignments/Assign4/clustering.py"
+[0.02381294]
+0.023812939816047263
+(3, 689)
+Entropy 1.42789388084788
+1
+Attempts 17  tries left 5  assign time 2.710705041885376  cent time 0.6878292560577393
+Entropy 1.5551023276941358
+1
+Attempts 2001  tries left 4  assign time 747.2015216350555  cent time 162.01750135421753
+Entropy 1.5574319619297041
+1
+Attempts 2001  tries left 3  assign time 1258.2135441303253  cent time 271.7255868911743
+Entropy 1.5574319619297041
+1
+Attempts 2001  tries left 2  assign time 1720.0573439598083  cent time 369.72558784484863
+Entropy 1.5574319619297041
+1
+Attempts 2001  tries left 1  assign time 2358.4549980163574  cent time 509.3271610736847
+Entropy 1.5574319619297041
+1
+Attempts 2001  tries left 0  assign time 2988.076337814331  cent time 642.9016261100769
+Attempts 10022
+Entropy 1.42789388084788
+
+Process finished with exit code 0
+
+
+
+
+C:\Python\Python3\python.exe "C:/Users/thisisme1/Documents/CSCE415 - ML/Assignments/Assign4/clustering.py"
+[0.02381294]
+0.023812939816047263
+cossim
+(3, 689)
+Entropy 1.1631747532975814
+1
+Attempts 24  tries left 5  assign time 5.9207398891448975  cent time 1.3751540184020996
+Entropy 1.429814877813031
+1
+Attempts 2001  tries left 4  assign time 833.5815591812134  cent time 172.67598223686218
+Entropy 1.429814877813031
+1
+Attempts 2001  tries left 3  assign time 1953.3761868476868  cent time 403.5679759979248
+Entropy 1.5574319619297041
+1
+Attempts 2001  tries left 2  assign time 2456.0003714561462  cent time 503.1341462135315
+Entropy 1.5574319619297041
+1
+Attempts 2001  tries left 1  assign time 3120.3038959503174  cent time 633.0815768241882
+Entropy 1.5574319619297041
+1
+Attempts 2001  tries left 0  assign time 3990.307978630066  cent time 814.772519826889
+Attempts 10029
+Entropy 1.1631747532975814
+
+Process finished with exit code 0
+
+
+C:\Python\Python3\python.exe "C:/Users/thisisme1/Documents/CSCE415 - ML/Assignments/Assign4/clustering.py"
+[0.02381294]
+0.023812939816047263
+(19, 689)
+Entropy 3.607638018031825
+6
+Attempts 2001  tries left 5  assign time 4902.638155221939  cent time 188.794588804245
+Entropy 3.5982353491474606
+6
+Attempts 2001  tries left 4  assign time 6708.855558633804  cent time 263.2642185688019
+Entropy 3.7875858323419855
+6
+Attempts 2001  tries left 3  assign time 8472.507192850113  cent time 335.2073974609375
+Entropy 3.914538326380856
+6
+Attempts 2001  tries left 2  assign time 10235.373717308044  cent time 404.98779010772705
+Entropy 3.9139843095996945
+6
+Attempts 2001  tries left 1  assign time 11999.139658689499  cent time 474.6688952445984
+Entropy 3.91449570155546
+6
+Attempts 2001  tries left 0  assign time 13760.3117146492  cent time 544.2336916923523
+Attempts 12006
+Entropy 3.607638018031825
+
+Process finished with exit code 0
+
+
+C:\Python\Python3\python.exe "C:/Users/thisisme1/Documents/CSCE415 - ML/Assignments/Assign4/clustering.py"
+[0.02381294]
+0.023812939816047263
+cossim
+(19, 689)
+Entropy 3.7837592378738663
+6
+Attempts 2001  tries left 5  assign time 4887.284390449524  cent time 173.83642292022705
+Entropy 3.9072438783732837
+6
+Attempts 2001  tries left 4  assign time 6867.592312097549  cent time 244.20769715309143
+Entropy 3.9042504419452797
+6
+Attempts 2001  tries left 3  assign time 8805.919177770615  cent time 313.2392165660858
+Entropy 3.906642608440814
+6
+Attempts 2001  tries left 2  assign time 10745.825385570526  cent time 381.16965556144714
+Entropy 4.242617033318755
+6
+Attempts 2001  tries left 1  assign time 12686.092531204224  cent time 444.088796377182
+Entropy 4.247214953539272
+6
+Attempts 2001  tries left 0  assign time 14449.24096941948  cent time 502.4231872558594
+Attempts 12006
+Entropy 3.7837592378738663
+
+Process finished with exit code 0
