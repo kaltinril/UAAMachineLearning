@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import time
-import matplotlib.pyplot
+import matplotlib.pyplot as plt
 
 column_prediction = 0
 
@@ -75,32 +75,27 @@ def create_column_probabilities(training):
     yes_prob = yes_sum / (yes.shape[0] + 1)
     no_prob = no_sum / (no.shape[0] + 1)
 
-    return yes_prob, no_prob
+    yes_count = yes.shape[1]
+    no_count = no.shape[1]
+
+    return yes_prob, no_prob, yes_count, no_count
 
 
-def predict_one(row, yes, no, total_rows):
+def predict_one(row, yes, no, yes_count, no_count, total_rows):
 
-    yes_prob = []
-    no_prob = []
-    for i in range(len(row)):
+    ones = np.where(row == 1)[0]
+    zeros = np.where(row == 0)[0]
 
-        yes_prob.append(yes[int(row[i]), i])
-        no_prob.append(no[int(row[i]), i])
-        #print(row[i])
-
-    yes_prob = np.hstack(yes_prob)
-    no_prob = np.hstack(no_prob)
+    yes_prob = np.hstack((yes[1, ones], yes[0, zeros]))
+    no_prob = np.hstack((no[1, ones], no[0, zeros]))
 
     # Do the log of each
     yes_prob = np.log2(yes_prob)
     no_prob = np.log2(no_prob)
 
     # Sum the values up, multiply by the YES / TOTAL and NO / TOTAL
-    yes_prob = np.sum(yes_prob) * (yes.shape[1] / total_rows)
-    no_prob = np.sum(no_prob) * (no.shape[1] / total_rows)
-
-    #print(yes_prob)
-    #print(no_prob)
+    yes_prob = np.sum(yes_prob) + np.log2(yes_count / total_rows)
+    no_prob = np.sum(no_prob) + np.log2(no_count / total_rows)
 
     result = -1 # assume not spam
     if yes_prob > no_prob:
@@ -109,41 +104,41 @@ def predict_one(row, yes, no, total_rows):
     return result
 
 
-def predict(validation, train, yes, no):
-    results = []
+def predict(validation, train, yes, no, yes_count, no_count):
     correct = 0
+
+    start = time.time()
+    results = []
     for row in range(validation.shape[0]):
-        result = predict_one(validation[row, 1:], yes, no, train.shape[0])
+        result = predict_one(validation[row, 1:], yes, no, yes_count, no_count, train.shape[0])
         if result == validation[row, 0:1]:
             correct += 1
 
         results.append(result)
 
+    print('apply', time.time() - start)
+
     return correct
 
 
 def run_all(data, num=0, per=1):
-
+    start = time.time()
     train, valid = split_training_validation(data, number=num, percent=per)
 
-    yes_prob, no_prob = create_column_probabilities(train)
+    yes_prob, no_prob, yes_count, no_count = create_column_probabilities(train)
 
     # Each column is 0 or 1, so lets now find the "0"'s
     yes_flip_prob = 1 - yes_prob
     no_flip_prob = 1 - no_prob
 
-    # Add 1 to prevernt nan and underflow/overflow/divide-by-zero
-    # yes_prob = yes_prob + 1
-    # no_prob = no_prob + 1
-    # yes_flip_prob = yes_flip_prob + 1
-    # no_flip_prob = no_flip_prob + 1
-
     yes = np.vstack((yes_flip_prob, yes_prob))
     no = np.vstack((no_flip_prob, no_prob))
 
-    correct = predict(valid, train, yes, no)
+    correct = predict(valid, train, yes, no, yes_count, no_count)
 
     print('Correct:', correct, ' Percent ', correct / valid.shape[0])
+
+    print('Run Time', time.time() - start)
 
     return correct / valid.shape[0]
 
@@ -157,3 +152,6 @@ for i in range(20):
 results.append(run_all(data, per=0.80))
 
 print(results)
+
+plt.plot(results)
+plt.show()
